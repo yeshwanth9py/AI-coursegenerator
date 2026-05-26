@@ -16,7 +16,7 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-// Custom method attached to the schema
+
 userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
