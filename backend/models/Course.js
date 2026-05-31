@@ -1,13 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const courseSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    title: { type: String, required: true },
-    topic: { type: String, required: true },
-    modules: [{
-        moduleTitle: String,
-        content: String
-    }]
-}, { timestamps: true });
+const courseSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, default: "" },
+    creator: { type: String, required: true }, // Auth0 sub or your user id
+    modules: [{ type: mongoose.Schema.Types.ObjectId, ref: "Module" }],
+    tags: [{ type: String, trim: true }],
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Course', courseSchema);
+module.exports = mongoose.model("Course", courseSchema);
