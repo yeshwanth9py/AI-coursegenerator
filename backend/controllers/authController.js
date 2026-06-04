@@ -10,9 +10,9 @@ const registerUser = async (req, res) => {
             res.status(400);
             throw new Error('User already exists');
         }
-        console.log('Registering user:', { name, email }); // Debug log
+        // console.log('Registering user:', { name, email }); // Debug log
         const user = await User.create({ name, email, password });
-        console.log('Registering user:', { name, email }); // Debug log
+        // console.log('Registering user:', { name, email }); // Debug log
         res.status(201).json({
             _id: user._id,
             name: user.name,

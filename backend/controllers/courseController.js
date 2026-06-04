@@ -41,12 +41,12 @@ exports.getCourseById = async (req, res, next) => {
     });
     console.log("Fetching course with ID:", course);
 
-    if (!course) return res.status(401).json({ message: "Course not found" });
+    if (!course) return res.status(404).json({ message: "Course not found" });
     if (course.creator != req.user.sub && course.creator != req.user._id) return res.status(403).json({ message: "Forbidden" });
 
     res.json(course);
   } catch (err) {
-    comsole.error("Error fetching course:", err);
+    console.error("Error fetching course:", err);
     next(err);
   }
 };
