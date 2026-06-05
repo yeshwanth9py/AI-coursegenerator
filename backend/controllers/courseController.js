@@ -101,6 +101,40 @@ exports.addLessonToModule = async (req, res, next) => {
   }
 };
 
+// PATCH /api/courses/lessons/:lessonId/content
+// Append a content block to an existing lesson
+exports.addContentBlock = async (req, res, next) => {
+  try {
+    const { lessonId } = req.params;
+    const { block } = req.body;
+
+    if (!block || !block.type) {
+      return res.status(400).json({ message: "A valid content block is required" });
+    }
+
+    const lesson = await Lesson.findById(lessonId).populate({
+      path: "module",
+      populate: { path: "course" },
+    });
+
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+    const course = lesson.module.course;
+    const userId = req.user.sub || req.user._id;
+    if (String(course.creator) !== String(userId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    lesson.content = [...(lesson.content || []), block];
+    lesson.markModified("content");
+    await lesson.save();
+
+    res.json(lesson);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // DELETE /api/courses/:courseId  (cascade delete)
 exports.deleteCourse = async (req, res, next) => {
   try {

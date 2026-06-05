@@ -5,12 +5,13 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Sparkles,
   Loader2,
   Tag,
   Clock,
   Layers,
   FileText,
+  Brain,
+  CheckCircle,
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
@@ -35,11 +36,8 @@ export default function CourseOverviewPage() {
       const { data } = await api.get(`/courses/${id}`);
       setCourse(data);
 
-      // Expand all modules by default
       const expanded = {};
-      data.modules?.forEach((mod) => {
-        expanded[mod._id] = true;
-      });
+      data.modules?.forEach((mod) => { expanded[mod._id] = true; });
       setExpandedModules(expanded);
     } catch (err) {
       toast.error('Failed to load course');
@@ -51,9 +49,9 @@ export default function CourseOverviewPage() {
   const handleEnrichLesson = async (lessonId) => {
     setEnrichingLessonId(lessonId);
     try {
-      await api.post(`/courses/lessons/${lessonId}/enrich`);
+      await api.post(`/courses/lessons/${lessonId}/enrich`, { depth: 'standard' });
       toast.success('Lesson content generated!');
-      await fetchCourse(); // Refresh
+      await fetchCourse();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to generate content');
     } finally {
@@ -62,16 +60,13 @@ export default function CourseOverviewPage() {
   };
 
   const toggleModule = (moduleId) => {
-    setExpandedModules((prev) => ({
-      ...prev,
-      [moduleId]: !prev[moduleId],
-    }));
+    setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="xl" text="Loading course..." />
+        <LoadingSpinner text="Loading course..." />
       </div>
     );
   }
@@ -82,7 +77,7 @@ export default function CourseOverviewPage() {
         <p className="text-slate-400 text-lg">Course not found.</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-indigo-400 hover:text-indigo-300 transition-colors text-sm"
+          className="mt-4 text-brand-400 hover:text-brand-300 transition-colors text-sm"
         >
           ← Back to Home
         </button>
@@ -91,22 +86,16 @@ export default function CourseOverviewPage() {
   }
 
   const totalLessons = course.modules?.reduce(
-    (acc, mod) => acc + (mod.lessons?.length || 0),
-    0
+    (sum, mod) => sum + (mod.lessons?.length || 0), 0
   ) || 0;
 
-  const enrichedLessons = course.modules?.reduce(
-    (acc, mod) =>
-      acc +
-      (mod.lessons?.filter((l) => l.isEnriched || l.content?.length > 0).length || 0),
-    0
+  const enrichedCount = course.modules?.reduce(
+    (sum, mod) => sum + (mod.lessons?.filter(l => l.isEnriched || l.content?.length > 0).length || 0), 0
   ) || 0;
 
   const createdDate = course.createdAt
     ? new Date(course.createdAt).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
+        month: 'long', day: 'numeric', year: 'numeric',
       })
     : '';
 
@@ -126,10 +115,10 @@ export default function CourseOverviewPage() {
       </div>
 
       {/* Course Header */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm p-8 mb-8">
+      <div className="glass-card p-8 mb-8">
         <div className="flex items-start gap-5 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/10 flex-shrink-0">
-            <BookOpen className="w-7 h-7 text-indigo-400" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center border border-brand-500/10 flex-shrink-0">
+            <BookOpen className="w-7 h-7 text-brand-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
@@ -161,10 +150,9 @@ export default function CourseOverviewPage() {
         {/* Stats */}
         <div className="flex flex-wrap gap-6 pt-4 border-t border-slate-800/60">
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Layers className="w-4 h-4 text-indigo-400" />
+            <Layers className="w-4 h-4 text-brand-400" />
             <span>
-              {course.modules?.length || 0} module
-              {(course.modules?.length || 0) !== 1 ? 's' : ''}
+              {course.modules?.length || 0} module{(course.modules?.length || 0) !== 1 ? 's' : ''}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -174,14 +162,12 @@ export default function CourseOverviewPage() {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>
-              {enrichedLessons}/{totalLessons} enriched
-            </span>
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span>{enrichedCount}/{totalLessons} enriched</span>
           </div>
           {createdDate && (
             <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Clock className="w-4 h-4 text-emerald-400" />
+              <Clock className="w-4 h-4 text-amber-400" />
               <span>Created {createdDate}</span>
             </div>
           )}
@@ -191,32 +177,27 @@ export default function CourseOverviewPage() {
       {/* Modules */}
       <div className="space-y-4">
         {course.modules?.map((mod, modIndex) => (
-          <div
-            key={mod._id}
-            className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm overflow-hidden"
-          >
+          <div key={mod._id} className="glass-card overflow-hidden">
             {/* Module Header */}
             <button
               onClick={() => toggleModule(mod._id)}
               className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-800/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-sm font-bold text-indigo-400 border border-indigo-500/10">
+                <span className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-sm font-bold text-brand-400 border border-brand-500/10">
                   {modIndex + 1}
                 </span>
                 <h3 className="text-base font-semibold text-white text-left">
                   {mod.title}
                 </h3>
                 <span className="text-xs text-slate-500 ml-2">
-                  {mod.lessons?.length || 0} lesson
-                  {(mod.lessons?.length || 0) !== 1 ? 's' : ''}
+                  {mod.lessons?.length || 0} lesson{(mod.lessons?.length || 0) !== 1 ? 's' : ''}
                 </span>
               </div>
-              {expandedModules[mod._id] ? (
-                <ChevronDown className="w-5 h-5 text-slate-500" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-slate-500" />
-              )}
+              {expandedModules[mod._id]
+                ? <ChevronDown className="w-5 h-5 text-slate-500" />
+                : <ChevronRight className="w-5 h-5 text-slate-500" />
+              }
             </button>
 
             {/* Lessons */}
@@ -228,9 +209,8 @@ export default function CourseOverviewPage() {
                   </p>
                 ) : (
                   mod.lessons?.map((lesson, lessonIndex) => {
-                    const isEnriched =
-                      lesson.isEnriched || lesson.content?.length > 0;
-                    const isEnriching = enrichingLessonId === lesson._id;
+                    const isEnriched = lesson.isEnriched || lesson.content?.length > 0;
+                    const isCurrentlyEnriching = enrichingLessonId === lesson._id;
 
                     return (
                       <div
@@ -238,9 +218,7 @@ export default function CourseOverviewPage() {
                         className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800/30 last:border-b-0 hover:bg-slate-800/20 transition-colors group"
                       >
                         <button
-                          onClick={() =>
-                            navigate(`/course/${id}/lesson/${lesson._id}`)
-                          }
+                          onClick={() => navigate(`/course/${id}/lesson/${lesson._id}`)}
                           className="flex items-center gap-3 flex-1 min-w-0 text-left"
                         >
                           <span className="w-6 h-6 rounded-md bg-slate-800/60 flex items-center justify-center text-xs font-medium text-slate-500 border border-slate-700/50 flex-shrink-0">
@@ -251,7 +229,7 @@ export default function CourseOverviewPage() {
                           </span>
                           {isEnriched && (
                             <span className="ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
-                              <Sparkles className="w-2.5 h-2.5" />
+                              <CheckCircle className="w-2.5 h-2.5" />
                               Enriched
                             </span>
                           )}
@@ -260,19 +238,13 @@ export default function CourseOverviewPage() {
                         {!isEnriched && (
                           <button
                             onClick={() => handleEnrichLesson(lesson._id)}
-                            disabled={isEnriching}
-                            className="ml-3 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 opacity-0 group-hover:opacity-100"
+                            disabled={isCurrentlyEnriching}
+                            className="ml-3 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 opacity-0 group-hover:opacity-100"
                           >
-                            {isEnriching ? (
-                              <>
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                Generating...
-                              </>
+                            {isCurrentlyEnriching ? (
+                              <><Loader2 className="w-3 h-3 animate-spin" /> Generating...</>
                             ) : (
-                              <>
-                                <Sparkles className="w-3 h-3" />
-                                Enrich
-                              </>
+                              <><Brain className="w-3 h-3" /> Enrich</>
                             )}
                           </button>
                         )}
@@ -286,14 +258,10 @@ export default function CourseOverviewPage() {
         ))}
 
         {(!course.modules || course.modules.length === 0) && (
-          <div className="text-center py-16 rounded-2xl border border-slate-700/50 bg-slate-900/40">
+          <div className="text-center py-16 glass-card">
             <Layers className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-300 mb-2">
-              No modules yet
-            </h3>
-            <p className="text-sm text-slate-500">
-              This course doesn't have any modules yet.
-            </p>
+            <h3 className="text-lg font-semibold text-slate-300 mb-2">No modules yet</h3>
+            <p className="text-sm text-slate-500">This course doesn't have any modules yet.</p>
           </div>
         )}
       </div>

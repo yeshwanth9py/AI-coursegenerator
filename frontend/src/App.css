@@ -1,5 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
+/* App-level overrides — keep minimal, global styles live in index.css */

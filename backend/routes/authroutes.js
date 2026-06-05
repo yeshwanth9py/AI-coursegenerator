@@ -1,12 +1,10 @@
-
-const {loginUser, registerUser} = require('../controllers/authcontroller');
-
 const { Router } = require('express');
-const { protect } = require('../middlewares/authmiddleware');
+const { registerUser, loginUser, auth0Sync } = require('../controllers/authController');
+
 const router = Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-
+router.post('/auth0-sync', auth0Sync);
 
 module.exports = router;

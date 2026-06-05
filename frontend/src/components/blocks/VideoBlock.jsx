@@ -1,17 +1,20 @@
 import { Play, ExternalLink } from 'lucide-react';
 
+/**
+ * Renders a YouTube video embed (inline playback).
+ * Falls back to a link card for non-YouTube URLs.
+ */
 export default function VideoBlock({ block }) {
   if (!block) return null;
 
-  const url = block.url || block.src || '';
+  const url   = block.url || block.src || '';
   const title = block.title || block.text || 'Video';
 
-  // Extract YouTube video ID from various URL formats
   const getYouTubeId = (videoUrl) => {
     if (!videoUrl) return null;
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/, // Plain video ID
+      /^([a-zA-Z0-9_-]{11})$/,
     ];
     for (const pattern of patterns) {
       const match = videoUrl.match(pattern);
@@ -22,9 +25,10 @@ export default function VideoBlock({ block }) {
 
   const youtubeId = getYouTubeId(url);
 
+  // YouTube embed — plays inline, no redirect
   if (youtubeId) {
     return (
-      <div className="my-6 rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
+      <div className="my-6 glass-card overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 bg-slate-800/50 border-b border-slate-700/50">
           <div className="flex items-center gap-2">
             <Play className="w-4 h-4 text-rose-400" />
@@ -39,9 +43,11 @@ export default function VideoBlock({ block }) {
             className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
-            Open on YouTube
+            YouTube
           </a>
         </div>
+
+        {/* 16:9 responsive iframe — plays directly on the page */}
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
           <iframe
             className="absolute inset-0 w-full h-full"
@@ -51,6 +57,7 @@ export default function VideoBlock({ block }) {
             allowFullScreen
           />
         </div>
+
         {title && (
           <div className="px-5 py-3 border-t border-slate-700/50">
             <p className="text-sm text-slate-300 font-medium">{title}</p>
@@ -60,10 +67,10 @@ export default function VideoBlock({ block }) {
     );
   }
 
-  // Fallback for non-YouTube URLs — render as a link
+  // Non-YouTube URL — link card
   if (url) {
     return (
-      <div className="my-6 flex items-center gap-3 p-4 rounded-xl border border-slate-700/50 bg-slate-900/60">
+      <div className="my-6 flex items-center gap-3 p-4 glass-card">
         <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
           <Play className="w-5 h-5 text-rose-400" />
         </div>
@@ -73,7 +80,7 @@ export default function VideoBlock({ block }) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
           >
             {url}
           </a>
@@ -83,9 +90,8 @@ export default function VideoBlock({ block }) {
     );
   }
 
-  // No URL provided
   return (
-    <div className="my-6 p-4 rounded-xl border border-slate-700/50 bg-slate-800/30 text-slate-500 text-sm italic">
+    <div className="my-6 p-4 glass-card text-slate-500 text-sm italic">
       Video content not available.
     </div>
   );

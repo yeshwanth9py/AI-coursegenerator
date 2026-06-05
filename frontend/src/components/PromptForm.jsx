@@ -1,29 +1,28 @@
 import { useState } from "react";
-import { Sparkles, Lightbulb, ArrowRight, Loader2 } from "lucide-react";
+import { Lightbulb, ArrowRight, Loader2, Brain } from "lucide-react";
+
+const SUGGESTIONS = [
+  "Create a beginner React course with projects",
+  "Make a MERN stack course for college students",
+  "Build a DSA roadmap course for interview prep",
+  "Generate a full Python course for absolute beginners",
+];
 
 export default function PromptForm({ onSubmit, isLoading = false }) {
   const [prompt, setPrompt] = useState("");
 
-  const suggestions = [
-    "Create a beginner React course with projects",
-    "Make a MERN stack course for college students",
-    "Build a DSA roadmap course for interview prep",
-    "Generate a full Python course for absolute beginners",
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
-
     await onSubmit(prompt);
     setPrompt("");
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl text-white">
+    <div className="w-full max-w-3xl mx-auto glass-card p-6 shadow-2xl text-white">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg shadow-purple-500/20">
-          <Sparkles className="h-5 w-5 text-white" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-purple-600 shadow-lg shadow-brand-500/20">
+          <Brain className="h-5 w-5 text-white" />
         </div>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">AI Course Generator</h2>
@@ -34,7 +33,7 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-3 shadow-inner">
+        <div className="rounded-2xl border border-slate-700/40 bg-surface-950/70 p-3 shadow-inner">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -52,7 +51,7 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-3 font-semibold text-white shadow-lg shadow-purple-500/25 transition hover:-translate-y-0.5 hover:from-purple-500 hover:to-pink-500 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="btn-primary"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -64,19 +63,19 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
         </div>
       </form>
 
-      <div className="mt-6 border-t border-white/10 pt-5">
+      <div className="mt-6 border-t border-slate-700/40 pt-5">
         <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-300">
-          <Lightbulb className="h-4 w-4 text-yellow-400" />
+          <Lightbulb className="h-4 w-4 text-amber-400" />
           Suggestions
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {suggestions.map((item) => (
+          {SUGGESTIONS.map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => setPrompt(item)}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-white"
+              className="rounded-full border border-slate-700/40 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-brand-500/40 hover:bg-brand-500/10 hover:text-white"
             >
               {item}
             </button>

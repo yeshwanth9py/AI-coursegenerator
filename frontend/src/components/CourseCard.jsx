@@ -18,14 +18,14 @@ export default function CourseCard({ course, onDelete }) {
   return (
     <div
       onClick={() => navigate(`/course/${course._id}`)}
-      className="group relative rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm p-6 cursor-pointer transition-all duration-300 hover:border-indigo-500/30 hover:bg-slate-800/60 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
+      className="group relative glass-card p-6 cursor-pointer transition-all duration-300 hover:border-brand-500/30 hover:bg-slate-800/40 hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1"
     >
-      {/* Gradient accent bar */}
-      <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 rounded-b opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      {/* Top accent bar on hover */}
+      <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-brand-500 to-purple-500 rounded-b opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/10 flex-shrink-0">
-          <BookOpen className="w-5 h-5 text-indigo-400" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center border border-brand-500/10 flex-shrink-0">
+          <BookOpen className="w-5 h-5 text-brand-400" />
         </div>
 
         <button
@@ -40,7 +40,7 @@ export default function CourseCard({ course, onDelete }) {
         </button>
       </div>
 
-      <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-indigo-200 transition-colors">
+      <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-brand-200 transition-colors">
         {course.title}
       </h3>
 
