@@ -2,6 +2,48 @@ const Course = require("../models/Course");
 const Module = require("../models/Module");
 const Lesson = require("../models/Lesson");
 
+const sanitizeText = (value, maxLength = 1000) => (
+  typeof value === "string" ? value.trim().slice(0, maxLength) : ""
+);
+
+const normalizeContentBlock = (block) => {
+  if (!block || typeof block !== "object") return null;
+
+  if (block.type === "heading") {
+    const text = sanitizeText(block.text, 300);
+    if (!text) return null;
+    return { type: "heading", level: Number(block.level) === 3 ? 3 : 2, text };
+  }
+
+  if (block.type === "paragraph") {
+    const text = sanitizeText(block.text, 5000);
+    if (!text) return null;
+    return { type: "paragraph", text };
+  }
+
+  if (block.type === "code") {
+    const code = sanitizeText(block.code, 10000);
+    if (!code) return null;
+    return {
+      type: "code",
+      language: sanitizeText(block.language, 40) || "text",
+      code,
+    };
+  }
+
+  if (block.type === "video") {
+    const url = sanitizeText(block.url || block.src, 1000);
+    if (!url) return null;
+    return {
+      type: "video",
+      url,
+      title: sanitizeText(block.title || block.text, 300) || "Video",
+    };
+  }
+
+  return null;
+};
+
 // POST /api/courses
 exports.createCourse = async (req, res, next) => {
   try {
@@ -107,8 +149,9 @@ exports.addContentBlock = async (req, res, next) => {
   try {
     const { lessonId } = req.params;
     const { block } = req.body;
+    const normalizedBlock = normalizeContentBlock(block);
 
-    if (!block || !block.type) {
+    if (!normalizedBlock) {
       return res.status(400).json({ message: "A valid content block is required" });
     }
 
@@ -118,14 +161,19 @@ exports.addContentBlock = async (req, res, next) => {
     });
 
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    if (!lesson.module || !lesson.module.course) {
+      return res.status(404).json({ message: "Lesson is not attached to a valid course" });
+    }
 
     const course = lesson.module.course;
-    const userId = req.user.sub || req.user._id;
+    const userId = req.user?.sub || req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
     if (String(course.creator) !== String(userId)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    lesson.content = [...(lesson.content || []), block];
+    lesson.content = [...(lesson.content || []), normalizedBlock];
     lesson.markModified("content");
     await lesson.save();
 

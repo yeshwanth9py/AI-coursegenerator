@@ -1,184 +1,125 @@
-import { useState } from 'react';
-import { Search, Link2, Plus, X, ExternalLink, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle, Loader2, Play, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
 
-/**
- * Modal for searching YouTube videos and adding them to lesson content.
- * Users search externally on YouTube, then paste the URL to embed it.
- */
 export default function VideoSearchModal({ lessonId, lessonTitle, isOpen, onClose, onVideoAdded }) {
-  const [searchQuery, setSearchQuery] = useState(lessonTitle || '');
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [previewId, setPreviewId] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState('');
+  const [videos, setVideos] = useState([]);
+  const onVideoAddedRef = useRef(onVideoAdded);
+
+  useEffect(() => {
+    onVideoAddedRef.current = onVideoAdded;
+  }, [onVideoAdded]);
+
+  useEffect(() => {
+    if (!isOpen || !lessonId) return;
+
+    let cancelled = false;
+    setStatus('loading');
+    setError('');
+    setVideos([]);
+
+    api.post(`/courses/lessons/${lessonId}/add-videos`, { count: 3 })
+      .then(({ data }) => {
+        if (cancelled) return;
+
+        const addedVideos = Array.isArray(data.videos) ? data.videos : [];
+        setVideos(addedVideos);
+        setStatus('success');
+        onVideoAddedRef.current?.(data.lesson);
+        toast.success(`${addedVideos.length || 1} video${addedVideos.length === 1 ? '' : 's'} added below the lesson`);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+
+        setStatus('error');
+        setError(err.response?.data?.error || 'Failed to add videos');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, lessonId, lessonTitle]);
 
   if (!isOpen) return null;
 
-  const extractYouTubeId = (url) => {
-    if (!url) return null;
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/,
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
+  const handleClose = () => {
+    if (status === 'loading') return;
 
-  const handleSearchYouTube = () => {
-    if (!searchQuery.trim()) return;
-    const encoded = encodeURIComponent(searchQuery.trim());
-    window.open(`https://www.youtube.com/results?search_query=${encoded}`, '_blank');
-  };
-
-  const handleUrlPaste = (value) => {
-    setYoutubeUrl(value);
-    const id = extractYouTubeId(value);
-    setPreviewId(id);
-  };
-
-  const handleAddVideo = async () => {
-    const videoId = extractYouTubeId(youtubeUrl);
-    if (!videoId) {
-      toast.error('Please enter a valid YouTube URL');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const block = {
-        type: 'video',
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        title: videoTitle.trim() || `Video: ${lessonTitle}`,
-      };
-
-      const { data } = await api.patch(`/courses/lessons/${lessonId}/content`, { block });
-      toast.success('Video added to lesson!');
-      onVideoAdded?.(data);
-      resetAndClose();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to add video');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const resetAndClose = () => {
-    setYoutubeUrl('');
-    setVideoTitle('');
-    setPreviewId(null);
+    setStatus('idle');
+    setError('');
+    setVideos([]);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetAndClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl animate-fade-in">
-        {/* Header */}
+      <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl animate-fade-in">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/60">
           <div className="flex items-center gap-2">
             <Play className="w-5 h-5 text-rose-400" />
-            <h3 className="text-lg font-semibold text-white">Add Video</h3>
+            <h3 className="text-lg font-semibold text-white">Add Videos</h3>
           </div>
           <button
-            onClick={resetAndClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            onClick={handleClose}
+            disabled={status === 'loading'}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
-          {/* Step 1: Search YouTube */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Step 1: Search for a video
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search YouTube..."
-                  className="input-field pl-9"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchYouTube()}
-                />
-              </div>
-              <button onClick={handleSearchYouTube} className="btn-secondary flex-shrink-0">
-                <ExternalLink className="w-4 h-4" />
-                Search
-              </button>
+        <div className="p-6">
+          {status === 'loading' && (
+            <div className="text-center py-8">
+              <Loader2 className="w-10 h-10 text-brand-400 animate-spin mx-auto mb-4" />
+              <h4 className="text-base font-semibold text-white mb-2">Finding relevant videos</h4>
+              <p className="text-sm text-slate-400">
+                AI is matching YouTube videos to "{lessonTitle}" and embedding them below the lesson.
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Step 2: Paste URL */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Step 2: Paste the YouTube URL
-            </label>
-            <div className="relative">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                value={youtubeUrl}
-                onChange={(e) => handleUrlPaste(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="input-field pl-9"
-              />
-            </div>
-          </div>
-
-          {/* Video title (optional) */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Video title (optional)
-            </label>
-            <input
-              type="text"
-              value={videoTitle}
-              onChange={(e) => setVideoTitle(e.target.value)}
-              placeholder="Give this video a descriptive title..."
-              className="input-field"
-            />
-          </div>
-
-          {/* Preview */}
-          {previewId && (
-            <div className="rounded-xl overflow-hidden border border-slate-700/50">
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src={`https://www.youtube.com/embed/${previewId}`}
-                  title="Video preview"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+          {status === 'success' && (
+            <div className="py-2">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-white">Videos added</h4>
+                  <p className="text-sm text-slate-500">They are embedded below the lesson content.</p>
+                </div>
               </div>
+
+              {videos.length > 0 && (
+                <div className="space-y-2">
+                  {videos.map((video, index) => (
+                    <div key={`${video.url}-${index}`} className="rounded-xl border border-slate-700/50 bg-slate-800/30 px-4 py-3">
+                      <p className="text-sm font-medium text-slate-200 line-clamp-2">{video.title || 'YouTube video'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {status === 'error' && (
+            <div className="text-center py-8">
+              <AlertCircle className="w-10 h-10 text-rose-400 mx-auto mb-4" />
+              <h4 className="text-base font-semibold text-white mb-2">Could not add videos</h4>
+              <p className="text-sm text-slate-400">{error}</p>
             </div>
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800/60">
-          <button onClick={resetAndClose} className="btn-secondary">
-            Cancel
-          </button>
-          <button
-            onClick={handleAddVideo}
-            disabled={!previewId || saving}
-            className="btn-primary disabled:opacity-40"
-          >
-            <Plus className="w-4 h-4" />
-            {saving ? 'Adding...' : 'Add to Lesson'}
+          <button onClick={handleClose} disabled={status === 'loading'} className="btn-secondary disabled:opacity-40">
+            Close
           </button>
         </div>
       </div>

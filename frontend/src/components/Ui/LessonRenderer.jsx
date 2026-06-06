@@ -2,7 +2,6 @@ import HeadingBlock from "../blocks/HeadingBlock";
 import ParagraphBlock from "../blocks/ParagraphBlock";
 import CodeBlock from "../blocks/Codeblock";
 import VideoBlock from "../blocks/VideoBlock";
-import MCQBlock from "../blocks/MCQBlock";
 
 export default function LessonRenderer({ content }) {
   if (!content || content.length === 0) {
@@ -23,8 +22,6 @@ export default function LessonRenderer({ content }) {
             return <CodeBlock key={key} block={block} />;
           case "video":
             return <VideoBlock key={key} block={block} />;
-          case "mcq":
-            return <MCQBlock key={key} block={block} />;
           default:
             // Fallback for unknown text types
             if (block.text) return <ParagraphBlock key={key} block={{ text: block.text }} />;

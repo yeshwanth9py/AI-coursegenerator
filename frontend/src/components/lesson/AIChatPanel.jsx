@@ -59,14 +59,14 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex">
+    <div className="fixed inset-x-0 top-16 bottom-0 z-40 flex">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       {/* Panel */}
       <div className="relative ml-auto w-full max-w-md bg-slate-900 border-l border-slate-800/60 flex flex-col shadow-2xl animate-slide-right">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 flex-shrink-0">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-slate-900 border-b border-slate-800/60 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
               <MessageCircle className="w-4 h-4 text-brand-400" />
@@ -80,9 +80,10 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <span className="text-xs font-medium">Close</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 

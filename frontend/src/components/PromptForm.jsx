@@ -37,7 +37,7 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Example: Create a full beginner-friendly course on React with modules, lessons, projects, and quizzes..."
+            placeholder="Example: Create a full beginner-friendly course on React with modules, lessons, and projects..."
             rows={3}
             className="w-full resize-none bg-transparent px-1 py-1 text-slate-100 placeholder:text-slate-600 outline-none"
           />

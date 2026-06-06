@@ -8,10 +8,10 @@ import {
   Play,
   MessageCircle,
   Brain,
-  RefreshCw,
   Zap,
   BookOpen,
   GraduationCap,
+  Languages,
 } from 'lucide-react';
 import LessonRenderer from '../components/Ui/LessonRenderer';
 import DownloadButton from '../components/DownloadButton';
@@ -42,11 +42,23 @@ const DEPTH_OPTIONS = [
   {
     key: 'deep',
     label: 'Deep Dive',
-    description: 'Exhaustive with code, examples & quizzes',
+    description: 'Exhaustive with examples and edge cases',
     icon: GraduationCap,
     color: 'text-purple-400',
     bg: 'bg-purple-500/10 border-purple-500/20',
   },
+];
+
+const LANGUAGE_OPTIONS = [
+  'English',
+  'Hindi',
+  'Spanish',
+  'French',
+  'German',
+  'Tamil',
+  'Telugu',
+  'Bengali',
+  'Marathi',
 ];
 
 export default function LessonViewerPage() {
@@ -57,13 +69,13 @@ export default function LessonViewerPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enriching, setEnriching] = useState(false);
-  const [continuing, setContinuing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
 
   // Depth selector state
   const [showDepthPicker, setShowDepthPicker] = useState(false);
   const [selectedDepth, setSelectedDepth] = useState('standard');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
 
   // Feature panels
   const [showQuiz, setShowQuiz] = useState(false);
@@ -109,6 +121,7 @@ export default function LessonViewerPage() {
     try {
       const { data } = await api.post(`/courses/lessons/${lessonId}/enrich`, {
         depth: selectedDepth,
+        language: selectedLanguage,
       });
       setLesson(data);
       toast.success('Lesson content generated!');
@@ -116,19 +129,6 @@ export default function LessonViewerPage() {
       toast.error(err.response?.data?.error || 'Failed to generate content');
     } finally {
       setEnriching(false);
-    }
-  };
-
-  const handleContinue = async () => {
-    setContinuing(true);
-    try {
-      const { data } = await api.post(`/courses/lessons/${lessonId}/continue`);
-      setLesson(data);
-      toast.success('More content added!');
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to continue generating');
-    } finally {
-      setContinuing(false);
     }
   };
 
@@ -291,6 +291,27 @@ export default function LessonViewerPage() {
                     ))}
                   </div>
 
+                  <div className="max-w-xl mx-auto mb-6 text-left">
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+                      <Languages className="w-4 h-4 text-brand-400" />
+                      Content language
+                    </label>
+                    <input
+                      type="text"
+                      list="lesson-language-options"
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      placeholder="English, Hindi, Japanese..."
+                      className="input-field"
+                    />
+                    <datalist id="lesson-language-options">
+                      {LANGUAGE_OPTIONS.map((language) => (
+                        <option key={language} value={language}>
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
+
                   <div className="flex items-center justify-center gap-3">
                     <button onClick={() => setShowDepthPicker(false)} className="btn-secondary">
                       Cancel
@@ -318,23 +339,11 @@ export default function LessonViewerPage() {
           {hasContent && (
             <div className="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-slate-800/40">
               <button
-                onClick={handleContinue}
-                disabled={continuing}
-                className="btn-secondary"
-              >
-                {continuing ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Continuing...</>
-                ) : (
-                  <><RefreshCw className="w-4 h-4" /> Continue Generating</>
-                )}
-              </button>
-
-              <button
                 onClick={() => setShowVideoModal(true)}
                 className="btn-secondary"
               >
                 <Play className="w-4 h-4" />
-                Add Video
+                Add Videos
               </button>
 
               <button
@@ -346,11 +355,11 @@ export default function LessonViewerPage() {
               </button>
 
               <button
-                onClick={() => setShowChat(true)}
+                onClick={() => setShowChat(prev => !prev)}
                 className="btn-secondary"
               >
                 <MessageCircle className="w-4 h-4" />
-                Chat with AI
+                {showChat ? 'Close Chat' : 'Chat with AI'}
               </button>
             </div>
           )}

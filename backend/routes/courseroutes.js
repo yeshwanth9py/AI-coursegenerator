@@ -6,8 +6,8 @@ const courseController = require("../controllers/courseController");
 const {
   generateCourseContent,
   enrichLesson,
-  continueLesson,
   generateQuiz,
+  addSuggestedVideos,
   chatAboutLesson,
 } = require("../controllers/courseAiController");
 
@@ -25,8 +25,8 @@ router.patch("/lessons/:lessonId/content", protect, courseController.addContentB
 /* ── AI-powered endpoints ────────────────────── */
 router.post("/generate",                       protect, generateCourseContent);
 router.post("/lessons/:lessonId/enrich",        protect, enrichLesson);
-router.post("/lessons/:lessonId/continue",      protect, continueLesson);
 router.post("/lessons/:lessonId/generate-quiz", protect, generateQuiz);
+router.post("/lessons/:lessonId/add-videos",    protect, addSuggestedVideos);
 router.post("/lessons/:lessonId/chat",          protect, chatAboutLesson);
 
 module.exports = router;
