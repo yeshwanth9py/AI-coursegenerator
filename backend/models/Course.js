@@ -4,7 +4,7 @@ const courseSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
-    creator: { type: String, required: true }, // Auth0 sub or your user id
+    creator: { type: String, required: true },
     modules: [{ type: mongoose.Schema.Types.ObjectId, ref: "Module" }],
     tags: [{ type: String, trim: true }],
   },

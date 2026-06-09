@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, Trophy, RotateCcw, Loader2, Brain } from 'lucide-react';
+import api from '../../utils/api';
 
-/**
- * Quiz panel that displays AI-generated MCQ questions.
- * Shows one question at a time with scoring.
- */
-export default function QuizPanel({ lessonId, onClose }) {
+export default function QuizPanel({ lessonId }) {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,7 +17,6 @@ export default function QuizPanel({ lessonId, onClose }) {
     setError(null);
 
     try {
-      const api = (await import('../../utils/api')).default;
       const { data } = await api.post(`/courses/lessons/${lessonId}/generate-quiz`);
       setQuestions(data.questions || []);
       setCurrentIndex(0);
@@ -66,7 +62,6 @@ export default function QuizPanel({ lessonId, onClose }) {
     setFinished(false);
   };
 
-  // Initial state — show start button
   if (questions.length === 0 && !loading && !error) {
     return (
       <div className="glass-card p-8 text-center mt-8">
@@ -102,7 +97,6 @@ export default function QuizPanel({ lessonId, onClose }) {
     );
   }
 
-  // Finished state — show score
   if (finished) {
     const percentage = Math.round((score / questions.length) * 100);
     const emoji = percentage >= 80 ? '🎉' : percentage >= 50 ? '👍' : '📚';
@@ -135,12 +129,10 @@ export default function QuizPanel({ lessonId, onClose }) {
     );
   }
 
-  // Active question
   const question = questions[currentIndex];
 
   return (
     <div className="glass-card overflow-hidden mt-8">
-      {/* Progress bar */}
       <div className="h-1 bg-slate-800">
         <div
           className="h-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500"
@@ -149,7 +141,6 @@ export default function QuizPanel({ lessonId, onClose }) {
       </div>
 
       <div className="p-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
             Question {currentIndex + 1} of {questions.length}
@@ -159,12 +150,10 @@ export default function QuizPanel({ lessonId, onClose }) {
           </span>
         </div>
 
-        {/* Question */}
         <p className="text-base font-medium text-white mb-5 leading-relaxed">
           {question.question}
         </p>
 
-        {/* Options */}
         <div className="space-y-2.5 mb-5">
           {(question.options || []).map((option, idx) => {
             const isSelected = selectedAnswer === idx;
@@ -205,7 +194,6 @@ export default function QuizPanel({ lessonId, onClose }) {
           })}
         </div>
 
-        {/* Explanation (after reveal) */}
         {revealed && question.explanation && (
           <div className="mb-5 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
             <p className="text-sm text-slate-300">
@@ -215,7 +203,6 @@ export default function QuizPanel({ lessonId, onClose }) {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center gap-3">
           {!revealed ? (
             <button

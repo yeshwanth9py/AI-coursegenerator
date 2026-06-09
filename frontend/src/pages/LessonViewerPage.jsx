@@ -15,10 +15,11 @@ import {
 } from 'lucide-react';
 import LessonRenderer from '../components/Ui/LessonRenderer';
 import DownloadButton from '../components/DownloadButton';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingSpinner from '../components/Ui/LoadingSpinner';
 import QuizPanel from '../components/lesson/QuizPanel';
-import VideoSearchModal from '../components/lesson/VideoSearchModal';
+import AddVideosModal from '../components/lesson/AddVideosModal';
 import AIChatPanel from '../components/lesson/AIChatPanel';
+import LessonAudioPlayer from '../components/lesson/LessonAudioPlayer';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 
@@ -26,7 +27,7 @@ const DEPTH_OPTIONS = [
   {
     key: 'brief',
     label: 'Brief',
-    description: 'Key concepts only — quick overview',
+    description: 'Key concepts only - quick overview',
     icon: Zap,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10 border-emerald-500/20',
@@ -69,50 +70,51 @@ export default function LessonViewerPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enriching, setEnriching] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
 
-  // Depth selector state
   const [showDepthPicker, setShowDepthPicker] = useState(false);
   const [selectedDepth, setSelectedDepth] = useState('standard');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
 
-  // Feature panels
   const [showQuiz, setShowQuiz] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
-    loadLessonData();
-  }, [lessonId, courseId]);
+    let cancelled = false;
 
-  const loadLessonData = async () => {
-    setLoading(true);
-    try {
-      if (!courseId) return;
+    const loadLessonData = async () => {
+      setLoading(true);
 
-      const { data: courseData } = await api.get(`/courses/${courseId}`);
-      setCourse(courseData);
+      try {
+        const { data: courseData } = await api.get(`/courses/${courseId}`);
+        if (cancelled) return;
 
-      const expanded = {};
-      courseData.modules?.forEach((mod) => { expanded[mod._id] = true; });
-      setExpandedModules(expanded);
+        setCourse(courseData);
 
-      let found = null;
-      for (const mod of (courseData.modules || [])) {
-        for (const les of (mod.lessons || [])) {
-          if (les._id === lessonId) { found = les; break; }
-        }
-        if (found) break;
+        const expanded = {};
+        courseData.modules?.forEach((moduleDoc) => {
+          expanded[moduleDoc._id] = true;
+        });
+        setExpandedModules(expanded);
+
+        const lessons = courseData.modules?.flatMap((moduleDoc) => moduleDoc.lessons || []) || [];
+        const currentLesson = lessons.find((item) => item._id === lessonId) || null;
+        setLesson(currentLesson);
+        setSelectedLanguage(currentLesson?.language || 'English');
+      } catch {
+        if (!cancelled) toast.error('Failed to load lesson');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    };
 
-      setLesson(found);
-    } catch (err) {
-      toast.error('Failed to load lesson');
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadLessonData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonId, courseId]);
 
   const handleEnrich = async () => {
     setEnriching(true);
@@ -152,12 +154,9 @@ export default function LessonViewerPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-73px)] animate-fade-in">
-      {/* ─── Sidebar ─────────────────────────── */}
       {course && (
         <aside
-          className={`${
-            sidebarOpen ? 'w-80' : 'w-0'
-          } flex-shrink-0 border-r border-slate-800/40 bg-surface-950/50 overflow-hidden transition-all duration-300 hidden lg:block`}
+          className="w-80 flex-shrink-0 border-r border-slate-800/40 bg-surface-950/50 overflow-hidden hidden lg:block"
         >
           <div className="w-80 h-full overflow-y-auto py-4">
             <div className="px-4 pb-4 border-b border-slate-800/40 mb-2">
@@ -207,10 +206,8 @@ export default function LessonViewerPage() {
         </aside>
       )}
 
-      {/* ─── Main Content ────────────────────── */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 lg:px-12 py-8 max-w-4xl mx-auto">
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-8 flex-wrap">
             <button onClick={() => navigate('/')} className="hover:text-white transition-colors">
               Home
@@ -232,7 +229,6 @@ export default function LessonViewerPage() {
             </span>
           </div>
 
-          {/* ─── Generate / Regenerate Card ──── */}
           {lesson && (
             <div className="glass-card p-8 text-center mb-8">
               {!showDepthPicker ? (
@@ -332,12 +328,16 @@ export default function LessonViewerPage() {
             </div>
           )}
 
-          {/* ─── Lesson Content ──────────────── */}
           <LessonRenderer content={lesson?.content} />
 
-          {/* ─── Action Toolbar (below content) */}
           {hasContent && (
             <div className="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-slate-800/40">
+              <LessonAudioPlayer
+                title={lesson.title}
+                content={lesson.content}
+                language={lesson.language}
+              />
+
               <button
                 onClick={() => setShowVideoModal(true)}
                 className="btn-secondary"
@@ -364,21 +364,15 @@ export default function LessonViewerPage() {
             </div>
           )}
 
-          {/* ─── Quiz Panel ──────────────────── */}
           {hasContent && showQuiz && (
-            <QuizPanel
-              lessonId={lessonId}
-              onClose={() => setShowQuiz(false)}
-            />
+            <QuizPanel lessonId={lessonId} />
           )}
 
-          {/* ─── Download Button ─────────────── */}
           {hasContent && <DownloadButton lessonTitle={lesson.title} />}
         </div>
       </div>
 
-      {/* ─── Modals & Panels ─────────────────── */}
-      <VideoSearchModal
+      <AddVideosModal
         lessonId={lessonId}
         lessonTitle={lesson?.title || ''}
         isOpen={showVideoModal}

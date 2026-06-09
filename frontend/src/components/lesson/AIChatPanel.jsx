@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
+import api from '../../utils/api';
 
-/**
- * Slide-out AI chat panel for discussing lesson content.
- * Chat history is session-only (not persisted to database).
- */
 export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -32,7 +29,6 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
     setSending(true);
 
     try {
-      const api = (await import('../../utils/api')).default;
       const { data } = await api.post(`/courses/lessons/${lessonId}/chat`, {
         message: text,
         history: messages.slice(-6),
@@ -60,12 +56,9 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
 
   return (
     <div className="fixed inset-x-0 top-16 bottom-0 z-40 flex">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      {/* Panel */}
       <div className="relative ml-auto w-full max-w-md bg-slate-900 border-l border-slate-800/60 flex flex-col shadow-2xl animate-slide-right">
-        {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-slate-900 border-b border-slate-800/60 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-brand-500/15 flex items-center justify-center">
@@ -87,7 +80,6 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
           </button>
         </div>
 
-        {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-12">
@@ -142,7 +134,6 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input bar */}
         <div className="border-t border-slate-800/60 p-4 flex-shrink-0">
           <div className="flex items-end gap-2">
             <textarea

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LogOut, Search, Menu, X } from 'lucide-react';
+import { BookOpen, LogOut, Search, X } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -11,15 +11,14 @@ export default function Navbar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
 
-    // Update URL search params so HomePage can read the query
     const params = new URLSearchParams(location.search);
     if (value.trim()) {
       params.set('search', value.trim());
@@ -27,7 +26,6 @@ export default function Navbar() {
       params.delete('search');
     }
 
-    // Only navigate if we're on the home page (avoid disrupting other pages)
     if (location.pathname === '/') {
       navigate(`/?${params.toString()}`, { replace: true });
     }
@@ -51,11 +49,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-slate-800/60">
       <div className="flex items-center justify-between px-4 lg:px-8 h-16">
-        {/* Left — mobile menu + search */}
         <div className="flex items-center gap-4">
-          <div className="lg:hidden">
-            <Menu className="w-5 h-5 text-slate-400" />
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/courses')}
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Open courses"
+          >
+            <BookOpen className="w-5 h-5" />
+          </button>
 
           <form
             onSubmit={handleSearchSubmit}
@@ -88,7 +90,6 @@ export default function Navbar() {
           </form>
         </div>
 
-        {/* Right — user info + sign out */}
         <div className="flex items-center gap-4">
           {user && (
             <div className="hidden sm:flex items-center gap-2">

@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { BookOpen, Search, Loader2 } from 'lucide-react';
 import CourseCard from '../components/CourseCard';
 import api from '../utils/api';
+import { notifyCourseListUpdated } from '../utils/courseEvents';
 import toast from 'react-hot-toast';
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
@@ -31,6 +30,7 @@ export default function CoursesPage() {
     try {
       await api.delete(`/courses/${courseId}`);
       setCourses((prev) => prev.filter((c) => c._id !== courseId));
+      notifyCourseListUpdated();
       toast.success('Course deleted');
     } catch (err) {
       toast.error('Failed to delete course');

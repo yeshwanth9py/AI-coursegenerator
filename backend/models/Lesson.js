@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const lessonSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
-    content: { type: [mongoose.Schema.Types.Mixed], required: true }, // blocks
+    content: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    language: { type: String, default: "English", trim: true },
     isEnriched: { type: Boolean, default: false },
     module: { type: mongoose.Schema.Types.ObjectId, ref: "Module", required: true },
   },

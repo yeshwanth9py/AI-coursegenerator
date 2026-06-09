@@ -28,7 +28,7 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to login');
+      toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to login');
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden text-slate-200">
-      {/* Background Effects */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
       
@@ -50,7 +49,6 @@ export default function LoginPage() {
           <p className="text-slate-400 text-center text-sm">Sign in to continue your AI learning journey</p>
         </div>
 
-        {/* Auth0 Social Login */}
         <button
           type="button"
           onClick={loginWithAuth0}
@@ -66,7 +64,6 @@ export default function LoginPage() {
           Continue with Google
         </button>
 
-        {/* Divider */}
         <div className="relative flex items-center mb-6">
           <div className="flex-1 border-t border-slate-700/60"></div>
           <span className="px-4 text-xs text-slate-500 uppercase tracking-wider font-medium">or sign in with email</span>
@@ -130,7 +127,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 text-center text-sm text-slate-400">
-          Don't have an account?{' '}
+          Do not have an account?{' '}
           <Link to="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
             Create one now
           </Link>

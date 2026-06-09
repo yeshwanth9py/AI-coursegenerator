@@ -1,29 +1,35 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-const protect = async (req, res, next) => {
-    let token;
+function readCookie(req, name) {
+  const cookies = String(req.headers.cookie || "").split(";");
+  const match = cookies.find((cookie) => cookie.trim().startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.trim().slice(name.length + 1)) : null;
+}
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
+async function protect(req, res, next) {
+  const bearerToken = req.headers.authorization?.startsWith("Bearer ")
+    ? req.headers.authorization.slice(7)
+    : null;
+  const token = bearerToken || readCookie(req, "courseai_session");
 
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  if (!token) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
 
-            req.user = await User.findById(decoded.id).select('-password');
-            console.log("Authenticated user:", req.user);
-            return next();
-        } catch (error) {
-            return res.status(401).json({ message: 'Not authorized, token failed' });
-        }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ error: "User no longer exists" });
     }
 
-    if (!token) {
-        return res.status(401).json({ message: 'Not authorized, no token provided' });
-    }
-};
+    req.user = user;
+    return next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired session" });
+  }
+}
 
 module.exports = { protect };
-
-
-

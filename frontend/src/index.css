@@ -1,11 +1,7 @@
-/* ─── Google Fonts ─────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Custom Properties ────────────────────── */
 :root {
   --color-brand:      #6366f1;
   --color-brand-light: #818cf8;
@@ -19,7 +15,6 @@
   --transition-base:   200ms ease;
 }
 
-/* ─── Base Reset ───────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -42,13 +37,11 @@ body {
   min-height: 100vh;
 }
 
-/* ─── Selection ────────────────────────────────── */
 ::selection {
   background: rgba(99, 102, 241, 0.3);
   color: #f8fafc;
 }
 
-/* ─── Scrollbar ────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -67,7 +60,6 @@ body {
   background: rgba(100, 116, 139, 0.5);
 }
 
-/* ─── Component Classes ────────────────────────── */
 @layer components {
   .glass-card {
     background: rgba(15, 23, 42, 0.6);
@@ -154,7 +146,6 @@ body {
   }
 }
 
-/* ─── Utility Overrides ────────────────────────── */
 @layer utilities {
   .text-accent-light {
     color: #818cf8;

@@ -1,31 +1,29 @@
 import { Play, ExternalLink } from 'lucide-react';
 
-/**
- * Renders a YouTube video embed (inline playback).
- * Falls back to a link card for non-YouTube URLs.
- */
+function getYouTubeId(videoUrl) {
+  if (!videoUrl) return null;
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = videoUrl.match(pattern);
+    if (match) return match[1];
+  }
+
+  return null;
+}
+
 export default function VideoBlock({ block }) {
   if (!block) return null;
 
   const url   = block.url || block.src || '';
   const title = block.title || block.text || 'Video';
 
-  const getYouTubeId = (videoUrl) => {
-    if (!videoUrl) return null;
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/,
-    ];
-    for (const pattern of patterns) {
-      const match = videoUrl.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
-
   const youtubeId = getYouTubeId(url);
 
-  // YouTube embed — plays inline, no redirect
   if (youtubeId) {
     return (
       <div className="my-6 glass-card overflow-hidden">
@@ -47,12 +45,12 @@ export default function VideoBlock({ block }) {
           </a>
         </div>
 
-        {/* 16:9 responsive iframe — plays directly on the page */}
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
           <iframe
             className="absolute inset-0 w-full h-full"
             src={`https://www.youtube.com/embed/${youtubeId}`}
             title={title}
+            loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
@@ -67,7 +65,6 @@ export default function VideoBlock({ block }) {
     );
   }
 
-  // Non-YouTube URL — link card
   if (url) {
     return (
       <div className="my-6 flex items-center gap-3 p-4 glass-card">

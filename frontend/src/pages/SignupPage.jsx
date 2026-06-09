@@ -29,7 +29,7 @@ export default function SignupPage() {
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create account');
+      toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden text-slate-200 py-10">
-      {/* Background Effects */}
       <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
       
@@ -51,7 +50,6 @@ export default function SignupPage() {
           <p className="text-slate-400 text-center text-sm">Join us and start learning today</p>
         </div>
 
-        {/* Auth0 Social Signup */}
         <button
           type="button"
           onClick={signupWithAuth0}
@@ -67,7 +65,6 @@ export default function SignupPage() {
           Continue with Google
         </button>
 
-        {/* Divider */}
         <div className="relative flex items-center mb-6">
           <div className="flex-1 border-t border-slate-700/60"></div>
           <span className="px-4 text-xs text-slate-500 uppercase tracking-wider font-medium">or sign up with email</span>
@@ -125,7 +122,7 @@ export default function SignupPage() {
                 className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-300"
                 placeholder="••••••••"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
           </div>

@@ -20,7 +20,6 @@ export default function CourseCard({ course, onDelete }) {
       onClick={() => navigate(`/course/${course._id}`)}
       className="group relative glass-card p-6 cursor-pointer transition-all duration-300 hover:border-brand-500/30 hover:bg-slate-800/40 hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1"
     >
-      {/* Top accent bar on hover */}
       <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-brand-500 to-purple-500 rounded-b opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="flex items-start justify-between gap-3 mb-4">
@@ -50,7 +49,6 @@ export default function CourseCard({ course, onDelete }) {
         </p>
       )}
 
-      {/* Tags */}
       {course.tags?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {course.tags.slice(0, 3).map((tag, i) => (
@@ -70,7 +68,6 @@ export default function CourseCard({ course, onDelete }) {
         </div>
       )}
 
-      {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-slate-800/60">
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <BookOpen className="w-3.5 h-3.5" />

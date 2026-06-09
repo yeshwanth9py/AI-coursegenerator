@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BookOpen, Zap, Globe, Brain, X } from 'lucide-react';
 import PromptForm from '../components/PromptForm';
 import CourseCard from '../components/CourseCard';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingSpinner from '../components/Ui/LoadingSpinner';
 import api from '../utils/api';
+import { notifyCourseListUpdated } from '../utils/courseEvents';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
@@ -38,7 +39,7 @@ export default function HomePage() {
       toast.success('Course generated successfully!');
       navigate(`/course/${data._id}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to generate course');
+      toast.error(err.response?.data?.error || 'Failed to generate course');
     } finally {
       setGenerating(false);
     }
@@ -49,6 +50,7 @@ export default function HomePage() {
     try {
       await api.delete(`/courses/${courseId}`);
       setCourses(prev => prev.filter(c => c._id !== courseId));
+      notifyCourseListUpdated();
       toast.success('Course deleted');
     } catch (err) {
       toast.error('Failed to delete course');
@@ -59,16 +61,13 @@ export default function HomePage() {
     setSearchParams({});
   };
 
-  const filteredCourses = useMemo(() => {
-    if (!searchQuery.trim()) return courses;
-
-    const query = searchQuery.toLowerCase();
-    return courses.filter(c =>
-      c.title?.toLowerCase().includes(query)
-      || c.description?.toLowerCase().includes(query)
-      || c.tags?.some(tag => tag.toLowerCase().includes(query))
-    );
-  }, [courses, searchQuery]);
+  const query = searchQuery.trim().toLowerCase();
+  const filteredCourses = query
+    ? courses.filter((course) =>
+      course.title?.toLowerCase().includes(query)
+      || course.description?.toLowerCase().includes(query)
+      || course.tags?.some((tag) => tag.toLowerCase().includes(query)))
+    : courses;
 
   const features = [
     {
@@ -90,7 +89,6 @@ export default function HomePage() {
 
   return (
     <div className="px-4 lg:px-8 py-8">
-      {/* ─── Hero Section ─────────────────── */}
       <section className="relative text-center py-12 lg:py-20 mb-12 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-[128px] animate-pulse-slow" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-[128px] animate-pulse-slow" />
@@ -109,7 +107,7 @@ export default function HomePage() {
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 animate-slide-up leading-relaxed">
             Describe any topic and watch AI build a complete, structured course with modules,
-            lessons, and detailed content — in seconds.
+            lessons, and detailed content in seconds.
           </p>
 
           <div className="animate-slide-up">
@@ -118,7 +116,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Features ─────────────────────── */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
         {features.map((f, i) => (
           <div
@@ -135,7 +132,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* ─── My Courses ───────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-8">
           <div>

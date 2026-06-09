@@ -2,9 +2,7 @@ const Groq = require("groq-sdk");
 const Course = require("../models/Course");
 const Module = require("../models/Module");
 const Lesson = require("../models/Lesson");
-
-const dotenv = require("dotenv");
-dotenv.config();
+const aiQueue = require("../utils/aiQueue");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -28,7 +26,7 @@ class RequestError extends Error {
 }
 
 function getUserId(req) {
-  return req.user?.sub || req.user?._id;
+  return req.user?._id;
 }
 
 function sanitizeText(value, maxLength = 1000) {
@@ -67,6 +65,10 @@ function handleControllerError(res, label, err) {
     return res.status(err.statusCode).json({ error: err.message });
   }
 
+  if (err?.statusCode && err?.message) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
   if (err?.name === "CastError") {
     return res.status(400).json({ error: "Invalid id provided." });
   }
@@ -87,6 +89,11 @@ function getSafeGroqMaxTokens(messages, requestedMaxTokens) {
   }, 0);
 
   const availableOutputTokens = GROQ_TPM_LIMIT - estimatedInputTokens - GROQ_TOKEN_RESERVE;
+
+  if (availableOutputTokens < 256) {
+    throw buildHttpError(413, "The lesson context is too large for one AI request.");
+  }
+
   return Math.max(256, Math.min(requestedMaxTokens, availableOutputTokens));
 }
 
@@ -97,21 +104,23 @@ async function askGroqForJSON(systemPrompt, userPrompt, maxTokens = 4096) {
   ];
   const safeMaxTokens = getSafeGroqMaxTokens(messages, maxTokens);
 
-  const completion = await groq.chat.completions.create({
-    messages,
-    model: "openai/gpt-oss-20b",
-    response_format: { type: "json_object" },
-    reasoning_effort: GROQ_REASONING_EFFORT,
-    temperature: 0.5,
-    max_tokens: safeMaxTokens,
-  });
+  const completion = await aiQueue.enqueue(() =>
+    groq.chat.completions.create({
+      messages,
+      model: "openai/gpt-oss-20b",
+      response_format: { type: "json_object" },
+      reasoning_effort: GROQ_REASONING_EFFORT,
+      temperature: 0.5,
+      max_tokens: safeMaxTokens,
+    }),
+  );
 
   const raw = completion.choices[0]?.message?.content || "{}";
 
   try {
     return JSON.parse(raw);
   } catch (err) {
-    console.error("Invalid JSON returned by AI:", raw);
+    console.error("AI returned invalid JSON");
     throw buildHttpError(502, "AI returned invalid JSON. Please try again.");
   }
 }
@@ -119,13 +128,15 @@ async function askGroqForJSON(systemPrompt, userPrompt, maxTokens = 4096) {
 async function askGroqForText(messages, maxTokens = 2048) {
   const safeMaxTokens = getSafeGroqMaxTokens(messages, maxTokens);
 
-  const completion = await groq.chat.completions.create({
-    messages,
-    model: "openai/gpt-oss-20b",
-    reasoning_effort: GROQ_REASONING_EFFORT,
-    temperature: 0.7,
-    max_tokens: safeMaxTokens,
-  });
+  const completion = await aiQueue.enqueue(() =>
+    groq.chat.completions.create({
+      messages,
+      model: "openai/gpt-oss-20b",
+      reasoning_effort: GROQ_REASONING_EFFORT,
+      temperature: 0.7,
+      max_tokens: safeMaxTokens,
+    }),
+  );
 
   return completion.choices[0]?.message?.content || "";
 }
@@ -287,10 +298,11 @@ async function searchYouTubeWithApi(suggestions) {
       q: suggestion.searchQuery,
       key: apiKey,
       safeSearch: "moderate",
-      relevanceLanguage: "en",
     });
 
-    const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`);
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`, {
+      signal: AbortSignal.timeout(8000),
+    });
     if (!response.ok) continue;
 
     const data = await response.json();
@@ -300,7 +312,7 @@ async function searchYouTubeWithApi(suggestions) {
       seen.add(videoId);
 
       videos.push({
-        title: sanitizeText(item?.snippet?.title, 180) || suggestion.title,
+        title: sanitizeText(decodeYouTubeText(item?.snippet?.title), 180) || suggestion.title,
         url: `https://www.youtube.com/watch?v=${videoId}`,
         channelTitle: sanitizeText(item?.snippet?.channelTitle, 120),
         description: sanitizeText(item?.snippet?.description, 300),
@@ -327,6 +339,7 @@ async function searchYouTubeWithoutApi(suggestions) {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
         "Accept-Language": "en-US,en;q=0.9",
       },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) continue;
@@ -424,7 +437,7 @@ const generateCourseContent = async (req, res) => {
     }
 
     if (!prompt) {
-      return res.status(400).json({ message: "Prompt is required" });
+      return res.status(400).json({ error: "Prompt is required" });
     }
 
     const systemPrompt = [
@@ -561,6 +574,7 @@ const enrichLesson = async (req, res) => {
     }
 
     lesson.content = blocks;
+    lesson.language = language;
     lesson.isEnriched = true;
     lesson.markModified("content");
     await lesson.save();

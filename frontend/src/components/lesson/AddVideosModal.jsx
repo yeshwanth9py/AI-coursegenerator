@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle, Loader2, Play, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
 
-export default function VideoSearchModal({ lessonId, lessonTitle, isOpen, onClose, onVideoAdded }) {
+export default function AddVideosModal({ lessonId, lessonTitle, isOpen, onClose, onVideoAdded }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [videos, setVideos] = useState([]);
@@ -41,7 +41,7 @@ export default function VideoSearchModal({ lessonId, lessonTitle, isOpen, onClos
     return () => {
       cancelled = true;
     };
-  }, [isOpen, lessonId, lessonTitle]);
+  }, [isOpen, lessonId]);
 
   if (!isOpen) return null;
 
@@ -79,7 +79,7 @@ export default function VideoSearchModal({ lessonId, lessonTitle, isOpen, onClos
               <Loader2 className="w-10 h-10 text-brand-400 animate-spin mx-auto mb-4" />
               <h4 className="text-base font-semibold text-white mb-2">Finding relevant videos</h4>
               <p className="text-sm text-slate-400">
-                AI is matching YouTube videos to "{lessonTitle}" and embedding them below the lesson.
+                AI is matching YouTube videos to {lessonTitle} and embedding them below the lesson.
               </p>
             </div>
           )}

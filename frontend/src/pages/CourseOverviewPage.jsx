@@ -5,15 +5,13 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Loader2,
   Tag,
   Clock,
   Layers,
   FileText,
-  Brain,
   CheckCircle,
 } from 'lucide-react';
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingSpinner from '../components/Ui/LoadingSpinner';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 
@@ -24,40 +22,37 @@ export default function CourseOverviewPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
-  const [enrichingLessonId, setEnrichingLessonId] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchCourse = async () => {
+      setLoading(true);
+
+      try {
+        const { data } = await api.get(`/courses/${id}`);
+        if (cancelled) return;
+
+        setCourse(data);
+
+        const expanded = {};
+        data.modules?.forEach((moduleDoc) => {
+          expanded[moduleDoc._id] = true;
+        });
+        setExpandedModules(expanded);
+      } catch {
+        if (!cancelled) toast.error('Failed to load course');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
     fetchCourse();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
-
-  const fetchCourse = async () => {
-    setLoading(true);
-    try {
-      const { data } = await api.get(`/courses/${id}`);
-      setCourse(data);
-
-      const expanded = {};
-      data.modules?.forEach((mod) => { expanded[mod._id] = true; });
-      setExpandedModules(expanded);
-    } catch (err) {
-      toast.error('Failed to load course');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEnrichLesson = async (lessonId) => {
-    setEnrichingLessonId(lessonId);
-    try {
-      await api.post(`/courses/lessons/${lessonId}/enrich`, { depth: 'standard' });
-      toast.success('Lesson content generated!');
-      await fetchCourse();
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to generate content');
-    } finally {
-      setEnrichingLessonId(null);
-    }
-  };
 
   const toggleModule = (moduleId) => {
     setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -77,9 +72,10 @@ export default function CourseOverviewPage() {
         <p className="text-slate-400 text-lg">Course not found.</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-brand-400 hover:text-brand-300 transition-colors text-sm"
+          className="mt-4 inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 transition-colors text-sm"
         >
-          ← Back to Home
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
         </button>
       </div>
     );
@@ -101,7 +97,6 @@ export default function CourseOverviewPage() {
 
   return (
     <div className="px-4 lg:px-8 py-8 animate-fade-in">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-8">
         <button
           onClick={() => navigate('/')}
@@ -114,7 +109,6 @@ export default function CourseOverviewPage() {
         <span className="text-slate-300 truncate">{course.title}</span>
       </div>
 
-      {/* Course Header */}
       <div className="glass-card p-8 mb-8">
         <div className="flex items-start gap-5 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center border border-brand-500/10 flex-shrink-0">
@@ -132,7 +126,6 @@ export default function CourseOverviewPage() {
           </div>
         </div>
 
-        {/* Tags */}
         {course.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {course.tags.map((tag, i) => (
@@ -147,7 +140,6 @@ export default function CourseOverviewPage() {
           </div>
         )}
 
-        {/* Stats */}
         <div className="flex flex-wrap gap-6 pt-4 border-t border-slate-800/60">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Layers className="w-4 h-4 text-brand-400" />
@@ -174,11 +166,9 @@ export default function CourseOverviewPage() {
         </div>
       </div>
 
-      {/* Modules */}
       <div className="space-y-4">
         {course.modules?.map((mod, modIndex) => (
           <div key={mod._id} className="glass-card overflow-hidden">
-            {/* Module Header */}
             <button
               onClick={() => toggleModule(mod._id)}
               className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-800/30 transition-colors"
@@ -200,7 +190,6 @@ export default function CourseOverviewPage() {
               }
             </button>
 
-            {/* Lessons */}
             {expandedModules[mod._id] && (
               <div className="border-t border-slate-800/60">
                 {mod.lessons?.length === 0 ? (
@@ -210,8 +199,6 @@ export default function CourseOverviewPage() {
                 ) : (
                   mod.lessons?.map((lesson, lessonIndex) => {
                     const isEnriched = lesson.isEnriched || lesson.content?.length > 0;
-                    const isCurrentlyEnriching = enrichingLessonId === lesson._id;
-
                     return (
                       <div
                         key={lesson._id}
@@ -234,20 +221,6 @@ export default function CourseOverviewPage() {
                             </span>
                           )}
                         </button>
-
-                        {!isEnriched && (
-                          <button
-                            onClick={() => handleEnrichLesson(lesson._id)}
-                            disabled={isCurrentlyEnriching}
-                            className="ml-3 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 opacity-0 group-hover:opacity-100"
-                          >
-                            {isCurrentlyEnriching ? (
-                              <><Loader2 className="w-3 h-3 animate-spin" /> Generating...</>
-                            ) : (
-                              <><Brain className="w-3 h-3" /> Enrich</>
-                            )}
-                          </button>
-                        )}
                       </div>
                     );
                   })
@@ -261,7 +234,7 @@ export default function CourseOverviewPage() {
           <div className="text-center py-16 glass-card">
             <Layers className="w-12 h-12 text-slate-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-300 mb-2">No modules yet</h3>
-            <p className="text-sm text-slate-500">This course doesn't have any modules yet.</p>
+            <p className="text-sm text-slate-500">This course does not have any modules yet.</p>
           </div>
         )}
       </div>

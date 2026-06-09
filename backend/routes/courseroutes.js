@@ -11,18 +11,18 @@ const {
   chatAboutLesson,
 } = require("../controllers/courseAiController");
 
-/* ── Course CRUD ─────────────────────────────── */
+// Course CRUD
 router.post("/",                   protect, courseController.createCourse);
 router.get("/mine",                protect, courseController.getMyCourses);
 router.get("/:courseId",           protect, courseController.getCourseById);
 router.delete("/:courseId",        protect, courseController.deleteCourse);
 
-/* ── Module / Lesson management ──────────────── */
+// Module and lesson management
 router.post("/:courseId/modules",          protect, courseController.addModuleToCourse);
 router.post("/modules/:moduleId/lessons",  protect, courseController.addLessonToModule);
 router.patch("/lessons/:lessonId/content", protect, courseController.addContentBlock);
 
-/* ── AI-powered endpoints ────────────────────── */
+// AI endpoints
 router.post("/generate",                       protect, generateCourseContent);
 router.post("/lessons/:lessonId/enrich",        protect, enrichLesson);
 router.post("/lessons/:lessonId/generate-quiz", protect, generateQuiz);

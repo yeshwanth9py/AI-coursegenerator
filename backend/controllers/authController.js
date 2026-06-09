@@ -1,120 +1,122 @@
-const User = require('../models/User');
-const generateToken = require('../utils/generateToken');
+const User = require("../models/User");
+const generateToken = require("../utils/generateToken");
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user with email & password (local auth)
- * @access  Public
- */
-const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
-    try {
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-        const user = await User.create({
-            name,
-            email,
-            password,
-            authProvider: 'local',
-        });
+function setSessionCookie(res, userId) {
+  res.cookie("courseai_session", generateToken(userId), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: COOKIE_MAX_AGE,
+    path: "/",
+  });
+}
 
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            token: generateToken(user._id),
-        });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+function publicUser(user) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    picture: user.picture,
+  };
+}
+
+const registerUser = async (req, res, next) => {
+  const name = String(req.body?.name || "").trim().slice(0, 100);
+  const email = String(req.body?.email || "").trim().toLowerCase().slice(0, 254);
+  const password = String(req.body?.password || "");
+
+  if (!name || !email || password.length < 8) {
+    return res.status(400).json({ error: "Name, email, and a password of at least 8 characters are required" });
+  }
+
+  try {
+    const userExists = await User.findOne({ email });
+    if (userExists) return res.status(409).json({ error: "User already exists" });
+
+    const user = await User.create({ name, email, password, authProvider: "local" });
+    setSessionCookie(res, user._id);
+    return res.status(201).json(publicUser(user));
+  } catch (error) {
+    return next(error);
+  }
 };
 
-/**
- * @route   POST /api/auth/login
- * @desc    Login user with email & password (local auth)
- * @access  Public
- */
-const loginUser = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const user = await User.findOne({ email });
-        if (user && (await user.matchPassword(password))) {
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
-        }
-    } catch (error) {
-        res.status(401).json({ message: error.message });
+const loginUser = async (req, res, next) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = String(req.body?.password || "");
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ error: "Invalid email or password" });
     }
+
+    setSessionCookie(res, user._id);
+    return res.json(publicUser(user));
+  } catch (error) {
+    return next(error);
+  }
 };
 
-/**
- * @route   POST /api/auth/auth0-sync
- * @desc    Sync an Auth0-authenticated user to our database.
- *          Creates the user if first time, otherwise returns existing record.
- *          This runs AFTER Auth0 redirects back and the frontend SDK has a valid session.
- * @access  Public (called right after Auth0 redirect — no JWT yet)
- */
-const auth0Sync = async (req, res) => {
-    const { email, name, auth0Id, picture } = req.body;
+const auth0Sync = async (req, res, next) => {
+  const identity = req.auth0User;
+  const email = String(identity?.email || "").trim().toLowerCase();
+  const auth0Id = identity?.sub;
 
-    if (!email || !auth0Id) {
-        return res.status(400).json({ message: 'Email and auth0Id are required' });
-    }
+  if (!email || !auth0Id || identity.email_verified !== true) {
+    return res.status(400).json({ error: "Auth0 account must have a verified email address" });
+  }
 
-    try {
-        // Look up by auth0Id first, then by email as fallback
-        let user = await User.findOne({ auth0Id });
+  try {
+    let user = await User.findOne({ auth0Id });
 
-        if (!user) {
-            // Check if a local user with this email exists
-            user = await User.findOne({ email });
+    if (!user) {
+      user = await User.findOne({ email });
 
-            if (user) {
-                // Link this Auth0 identity to the existing local account
-                user.auth0Id = auth0Id;
-                user.name = user.name || name || 'User';
-                user.picture = picture || user.picture;
-                user.authProvider = 'auth0';
-                await user.save({ validateBeforeSave: false });
-            } else {
-                // Brand new Auth0 user — create record
-                user = await User.create({
-                    name: name || 'User',
-                    email,
-                    auth0Id,
-                    picture,
-                    authProvider: 'auth0',
-                    // No password — Auth0 manages authentication
-                });
-            }
-        } else {
-            // Existing Auth0 user — update name/picture if changed
-            let needsSave = false;
-            if (!user.name && name) { user.name = name; needsSave = true; }
-            if (picture && picture !== user.picture) { user.picture = picture; needsSave = true; }
-            if (needsSave) await user.save({ validateBeforeSave: false });
-        }
-
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            picture: user.picture,
-            token: generateToken(user._id),
+      if (user) {
+        user.auth0Id = auth0Id;
+        user.authProvider = "auth0";
+      } else {
+        user = new User({
+          name: identity.name || identity.nickname || "User",
+          email,
+          auth0Id,
+          authProvider: "auth0",
         });
-    } catch (error) {
-        console.error('Auth0 sync error:', error);
-        res.status(500).json({ message: 'Failed to sync Auth0 user' });
+      }
     }
+
+    user.name = user.name || identity.name || identity.nickname || "User";
+    user.picture = identity.picture || user.picture;
+    await user.save();
+
+    setSessionCookie(res, user._id);
+    return res.json(publicUser(user));
+  } catch (error) {
+    return next(error);
+  }
 };
 
-module.exports = { registerUser, loginUser, auth0Sync };
+const getCurrentUser = async (req, res) => {
+  return res.json(publicUser(req.user));
+};
+
+const logoutUser = async (req, res) => {
+  res.clearCookie("courseai_session", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
+  return res.status(204).send();
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  auth0Sync,
+  getCurrentUser,
+  logoutUser,
+};

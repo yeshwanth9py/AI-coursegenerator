@@ -2,205 +2,180 @@ const Course = require("../models/Course");
 const Module = require("../models/Module");
 const Lesson = require("../models/Lesson");
 
-const sanitizeText = (value, maxLength = 1000) => (
-  typeof value === "string" ? value.trim().slice(0, maxLength) : ""
-);
+function sanitizeText(value, maxLength = 1000) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
 
-const normalizeContentBlock = (block) => {
+function ownsCourse(course, user) {
+  return String(course.creator) === String(user._id);
+}
+
+function normalizeContentBlock(block) {
   if (!block || typeof block !== "object") return null;
 
   if (block.type === "heading") {
     const text = sanitizeText(block.text, 300);
-    if (!text) return null;
-    return { type: "heading", level: Number(block.level) === 3 ? 3 : 2, text };
+    return text ? { type: "heading", level: Number(block.level) === 3 ? 3 : 2, text } : null;
   }
 
   if (block.type === "paragraph") {
     const text = sanitizeText(block.text, 5000);
-    if (!text) return null;
-    return { type: "paragraph", text };
+    return text ? { type: "paragraph", text } : null;
   }
 
   if (block.type === "code") {
     const code = sanitizeText(block.code, 10000);
-    if (!code) return null;
-    return {
-      type: "code",
-      language: sanitizeText(block.language, 40) || "text",
-      code,
-    };
+    return code
+      ? { type: "code", language: sanitizeText(block.language, 40) || "text", code }
+      : null;
   }
 
   if (block.type === "video") {
     const url = sanitizeText(block.url || block.src, 1000);
-    if (!url) return null;
-    return {
-      type: "video",
-      url,
-      title: sanitizeText(block.title || block.text, 300) || "Video",
-    };
+    return url
+      ? { type: "video", url, title: sanitizeText(block.title || block.text, 300) || "Video" }
+      : null;
   }
 
   return null;
-};
+}
 
-// POST /api/courses
 exports.createCourse = async (req, res, next) => {
   try {
-    const { title, description, tags } = req.body;
+    const title = sanitizeText(req.body?.title, 160);
+    const description = sanitizeText(req.body?.description, 600);
+    const tags = Array.isArray(req.body?.tags)
+      ? req.body.tags.map((tag) => sanitizeText(tag, 40)).filter(Boolean).slice(0, 5)
+      : [];
+
+    if (!title) {
+      return res.status(400).json({ error: "Course title is required" });
+    }
 
     const course = await Course.create({
       title,
       description,
-      tags: tags || [],
-      creator: req.user.sub || req.user._id, // Auth0 sub or your user id
+      tags,
+      creator: req.user._id,
     });
 
-    res.status(201).json(course);
-  } catch (err) {
-    next(err);
+    return res.status(201).json(course);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// GET /api/courses/mine
 exports.getMyCourses = async (req, res, next) => {
   try {
-    const courses = await Course.find({ creator: req.user.sub || req.user._id }).sort({ createdAt: -1 });
-    res.json(courses);
-  } catch (err) {
-    next(err);
+    const courses = await Course.find({ creator: req.user._id }).sort({ createdAt: -1 });
+    return res.json(courses);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// GET /api/courses/:courseId (populate modules + lessons)
 exports.getCourseById = async (req, res, next) => {
   try {
-    const { courseId } = req.params;
-    const course = await Course.findById(courseId)
-    .populate({
-        path: "modules",
-        populate: { path: "lessons" },
+    const course = await Course.findById(req.params.courseId).populate({
+      path: "modules",
+      populate: { path: "lessons" },
     });
-    console.log("Fetching course with ID:", course);
 
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    if (course.creator != req.user.sub && course.creator != req.user._id) return res.status(403).json({ message: "Forbidden" });
+    if (!course) return res.status(404).json({ error: "Course not found" });
+    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
 
-    res.json(course);
-  } catch (err) {
-    console.error("Error fetching course:", err);
-    next(err);
+    return res.json(course);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// POST /api/courses/:courseId/modules
 exports.addModuleToCourse = async (req, res, next) => {
   try {
-    const { courseId } = req.params;
-    const { title } = req.body;
+    const title = sanitizeText(req.body?.title, 160);
+    if (!title) return res.status(400).json({ error: "Module title is required" });
 
-    const course = await Course.findById(courseId);
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    if (course.creator != req.user.sub && course.creator != req.user._id) return res.status(403).json({ message: "Forbidden" });
+    const course = await Course.findById(req.params.courseId);
+    if (!course) return res.status(404).json({ error: "Course not found" });
+    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
 
     const moduleDoc = await Module.create({ title, course: course._id });
-
     course.modules.push(moduleDoc._id);
     await course.save();
 
-    res.status(201).json(moduleDoc);
-  } catch (err) {
-    next(err);
+    return res.status(201).json(moduleDoc);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// POST /api/courses/modules/:moduleId/lessons
 exports.addLessonToModule = async (req, res, next) => {
   try {
-    const { moduleId } = req.params;
-    const { title, content } = req.body;
+    const title = sanitizeText(req.body?.title, 160);
+    if (!title) return res.status(400).json({ error: "Lesson title is required" });
 
-    const moduleDoc = await Module.findById(moduleId).populate("course");
-    if (!moduleDoc) return res.status(404).json({ message: "Module not found" });
+    const moduleDoc = await Module.findById(req.params.moduleId).populate("course");
+    if (!moduleDoc) return res.status(404).json({ error: "Module not found" });
+    if (!moduleDoc.course) return res.status(404).json({ error: "Course not found" });
+    if (!ownsCourse(moduleDoc.course, req.user)) return res.status(403).json({ error: "Forbidden" });
 
-    // check ownership via course.creator
-    const course = await Course.findById(moduleDoc.course._id);
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    if (course.creator != req.user.sub && course.creator != req.user._id) return res.status(403).json({ message: "Forbidden" });
+    const content = Array.isArray(req.body?.content)
+      ? req.body.content.map(normalizeContentBlock).filter(Boolean)
+      : [];
 
-    const lesson = await Lesson.create({
-      title,
-      content: content || [],
-      module: moduleDoc._id,
-    });
-
+    const lesson = await Lesson.create({ title, content, module: moduleDoc._id });
     moduleDoc.lessons.push(lesson._id);
     await moduleDoc.save();
 
-    res.status(201).json(lesson);
-  } catch (err) {
-    next(err);
+    return res.status(201).json(lesson);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// PATCH /api/courses/lessons/:lessonId/content
-// Append a content block to an existing lesson
 exports.addContentBlock = async (req, res, next) => {
   try {
-    const { lessonId } = req.params;
-    const { block } = req.body;
-    const normalizedBlock = normalizeContentBlock(block);
+    const block = normalizeContentBlock(req.body?.block);
+    if (!block) return res.status(400).json({ error: "A valid content block is required" });
 
-    if (!normalizedBlock) {
-      return res.status(400).json({ message: "A valid content block is required" });
-    }
-
-    const lesson = await Lesson.findById(lessonId).populate({
+    const lesson = await Lesson.findById(req.params.lessonId).populate({
       path: "module",
       populate: { path: "course" },
     });
 
-    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
-    if (!lesson.module || !lesson.module.course) {
-      return res.status(404).json({ message: "Lesson is not attached to a valid course" });
+    if (!lesson) return res.status(404).json({ error: "Lesson not found" });
+    if (!lesson.module?.course) {
+      return res.status(404).json({ error: "Lesson is not attached to a valid course" });
+    }
+    if (!ownsCourse(lesson.module.course, req.user)) {
+      return res.status(403).json({ error: "Forbidden" });
     }
 
-    const course = lesson.module.course;
-    const userId = req.user?.sub || req.user?._id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
-    if (String(course.creator) !== String(userId)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    lesson.content = [...(lesson.content || []), normalizedBlock];
+    lesson.content.push(block);
     lesson.markModified("content");
     await lesson.save();
 
-    res.json(lesson);
-  } catch (err) {
-    next(err);
+    return res.json(lesson);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// DELETE /api/courses/:courseId  (cascade delete)
 exports.deleteCourse = async (req, res, next) => {
   try {
-    const { courseId } = req.params;
+    const course = await Course.findById(req.params.courseId);
+    if (!course) return res.status(404).json({ error: "Course not found" });
+    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
 
-    const course = await Course.findById(courseId);
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    if (course.creator != req.user.sub && course.creator != req.user._id) return res.status(403).json({ message: "Forbidden" });
-
-    const modules = await Module.find({ course: course._id });
-    const moduleIds = modules.map((m) => m._id);
+    const modules = await Module.find({ course: course._id }).select("_id");
+    const moduleIds = modules.map((moduleDoc) => moduleDoc._id);
 
     await Lesson.deleteMany({ module: { $in: moduleIds } });
     await Module.deleteMany({ course: course._id });
-    await Course.deleteOne({ _id: course._id });
+    await course.deleteOne();
 
-    res.json({ message: "Course deleted" });
-  } catch (err) {
-    next(err);
+    return res.json({ message: "Course deleted" });
+  } catch (error) {
+    return next(error);
   }
 };
