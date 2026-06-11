@@ -3,8 +3,8 @@ const generateToken = require("../utils/generateToken");
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-function setSessionCookie(res, userId) {
-  res.cookie("courseai_session", generateToken(userId), {
+function setSessionCookie(res, token) {
+  res.cookie("courseai_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -22,6 +22,16 @@ function publicUser(user) {
   };
 }
 
+function createSessionResponse(res, user) {
+  const token = generateToken(user._id);
+  setSessionCookie(res, token);
+
+  return {
+    ...publicUser(user),
+    token,
+  };
+}
+
 const registerUser = async (req, res, next) => {
   const name = String(req.body?.name || "").trim().slice(0, 100);
   const email = String(req.body?.email || "").trim().toLowerCase().slice(0, 254);
@@ -36,8 +46,7 @@ const registerUser = async (req, res, next) => {
     if (userExists) return res.status(409).json({ error: "User already exists" });
 
     const user = await User.create({ name, email, password, authProvider: "local" });
-    setSessionCookie(res, user._id);
-    return res.status(201).json(publicUser(user));
+    return res.status(201).json(createSessionResponse(res, user));
   } catch (error) {
     return next(error);
   }
@@ -53,8 +62,7 @@ const loginUser = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    setSessionCookie(res, user._id);
-    return res.json(publicUser(user));
+    return res.json(createSessionResponse(res, user));
   } catch (error) {
     return next(error);
   }
@@ -92,8 +100,7 @@ const auth0Sync = async (req, res, next) => {
     user.picture = identity.picture || user.picture;
     await user.save();
 
-    setSessionCookie(res, user._id);
-    return res.json(publicUser(user));
+    return res.json(createSessionResponse(res, user));
   } catch (error) {
     return next(error);
   }

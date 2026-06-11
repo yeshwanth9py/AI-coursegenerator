@@ -33,6 +33,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
   app.listen(PORT, () => {
+    console.log(process.env.FRONTEND_URL);
     console.log(`Server listening on port ${PORT}`);
   });
 });

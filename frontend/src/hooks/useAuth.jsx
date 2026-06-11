@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import toast from 'react-hot-toast';
-import api from '../utils/api';
+import api, { clearAuthToken, setAuthToken } from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -25,12 +25,18 @@ export const AuthProvider = ({ children }) => {
     setUser(nextUser);
   }, []);
 
+  const login = useCallback(({ token, ...userData }) => {
+    setAuthToken(token);
+    updateUser(userData);
+  }, [updateUser]);
+
   useEffect(() => {
     const loadSession = async () => {
       try {
         const { data } = await api.get('/auth/me');
         updateUser(data);
-      } catch {
+      } catch (error) {
+        if (error.response?.status === 401) clearAuthToken();
         if (!userRef.current) updateUser(null);
       } finally {
         setSessionLoading(false);
@@ -57,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         const { data } = await api.post('/auth/auth0-sync', {}, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        updateUser(data);
+        login(data);
       } catch (error) {
         console.error('Auth0 sync failed:', error);
         auth0SyncStarted.current = false;
@@ -68,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     syncAuth0User();
-  }, [auth0Authenticated, getAccessTokenSilently, sessionLoading, updateUser, user]);
+  }, [auth0Authenticated, getAccessTokenSilently, login, sessionLoading, user]);
 
   useEffect(() => {
     const interceptorId = api.interceptors.response.use(
@@ -78,6 +84,7 @@ export const AuthProvider = ({ children }) => {
         const isLoginRequest = error.config?.url?.includes('/auth/login');
 
         if (error.response?.status === 401 && !isSessionCheck && !isLoginRequest) {
+          clearAuthToken();
           updateUser(null);
         }
         return Promise.reject(error);
@@ -87,12 +94,9 @@ export const AuthProvider = ({ children }) => {
     return () => api.interceptors.response.eject(interceptorId);
   }, [updateUser]);
 
-  const login = useCallback((userData) => {
-    updateUser(userData);
-  }, [updateUser]);
-
   const logout = useCallback(async () => {
     await api.post('/auth/logout').catch(() => {});
+    clearAuthToken();
     updateUser(null);
 
     if (auth0Authenticated) {
