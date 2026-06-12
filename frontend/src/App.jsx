@@ -1,36 +1,26 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/Ui/LoadingSpinner';
-import DashboardLayout from './Layouts/DashboardLayout';
-
-const HomePage = lazy(() => import('./pages/HomePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const SignupPage = lazy(() => import('./pages/SignupPage'));
-const CoursesPage = lazy(() => import('./pages/CoursesPage'));
-const CourseOverviewPage = lazy(() => import('./pages/CourseOverviewPage'));
-const LessonViewerPage = lazy(() => import('./pages/LessonViewerPage'));
-
-function FullPageLoader({ text = 'Loading...' }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <LoadingSpinner size="xl" text={text} />
-    </div>
-  );
-}
+import DashboardLayout from './components/layout/DashboardLayout';
+import LoadingSpinner from './components/LoadingSpinner';
+import CourseOverviewPage from './pages/CourseOverviewPage';
+import CertificatePage from './pages/CertificatePage';
+import HomePage from './pages/HomePage';
+import LessonViewerPage from './pages/LessonViewerPage';
+import LoginPage from './pages/LoginPage';
+import SharedCoursePage from './pages/SharedCoursePage';
+import SignupPage from './pages/SignupPage';
 
 function GuestRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <FullPageLoader />;
+  if (loading) return <LoadingSpinner text="Loading..." />;
   if (isAuthenticated) return <Navigate to="/" replace />;
-
   return children;
 }
 
-function ProtectedPage({ children }) {
+function DashboardPage({ children }) {
   return (
     <ProtectedRoute>
       <DashboardLayout>{children}</DashboardLayout>
@@ -41,61 +31,20 @@ function ProtectedPage({ children }) {
 export default function App() {
   return (
     <>
-      <Toaster position="top-center" toastOptions={{ style: { background: '#1e293b', color: '#f8fafc' } }} />
-
-      <Suspense fallback={<FullPageLoader text="Loading page..." />}>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <GuestRoute>
-                <LoginPage />
-              </GuestRoute>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <GuestRoute>
-                <SignupPage />
-              </GuestRoute>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ProtectedPage>
-                <HomePage />
-              </ProtectedPage>
-            }
-          />
-          <Route
-            path="/courses"
-            element={
-              <ProtectedPage>
-                <CoursesPage />
-              </ProtectedPage>
-            }
-          />
-          <Route
-            path="/course/:id"
-            element={
-              <ProtectedPage>
-                <CourseOverviewPage />
-              </ProtectedPage>
-            }
-          />
-          <Route
-            path="/course/:courseId/lesson/:id"
-            element={
-              <ProtectedPage>
-                <LessonViewerPage />
-              </ProtectedPage>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <Toaster position="top-center" />
+      <Routes>
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute><SignupPage /></GuestRoute>} />
+        <Route path="/share/:shareId" element={<SharedCoursePage />} />
+        <Route path="/" element={<DashboardPage><HomePage /></DashboardPage>} />
+        <Route path="/course/:id" element={<DashboardPage><CourseOverviewPage /></DashboardPage>} />
+        <Route path="/course/:id/certificate" element={<DashboardPage><CertificatePage /></DashboardPage>} />
+        <Route
+          path="/course/:courseId/lesson/:id"
+          element={<DashboardPage><LessonViewerPage /></DashboardPage>}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }

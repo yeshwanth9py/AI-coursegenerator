@@ -1,181 +1,143 @@
+const crypto = require("crypto");
 const Course = require("../models/Course");
-const Module = require("../models/Module");
-const Lesson = require("../models/Lesson");
+const { deleteCourseRecords } = require("../services/coursePersistence");
+const { getOwnedLesson } = require("../services/lessonAccessService");
 
-function sanitizeText(value, maxLength = 1000) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function ownsCourse(course, user) {
-  return String(course.creator) === String(user._id);
-}
-
-function normalizeContentBlock(block) {
-  if (!block || typeof block !== "object") return null;
-
-  if (block.type === "heading") {
-    const text = sanitizeText(block.text, 300);
-    return text ? { type: "heading", level: Number(block.level) === 3 ? 3 : 2, text } : null;
-  }
-
-  if (block.type === "paragraph") {
-    const text = sanitizeText(block.text, 5000);
-    return text ? { type: "paragraph", text } : null;
-  }
-
-  if (block.type === "code") {
-    const code = sanitizeText(block.code, 10000);
-    return code
-      ? { type: "code", language: sanitizeText(block.language, 40) || "text", code }
-      : null;
-  }
-
-  if (block.type === "video") {
-    const url = sanitizeText(block.url || block.src, 1000);
-    return url
-      ? { type: "video", url, title: sanitizeText(block.title || block.text, 300) || "Video" }
-      : null;
-  }
-
-  return null;
-}
-
-exports.createCourse = async (req, res, next) => {
-  try {
-    const title = sanitizeText(req.body?.title, 160);
-    const description = sanitizeText(req.body?.description, 600);
-    const tags = Array.isArray(req.body?.tags)
-      ? req.body.tags.map((tag) => sanitizeText(tag, 40)).filter(Boolean).slice(0, 5)
-      : [];
-
-    if (!title) {
-      return res.status(400).json({ error: "Course title is required" });
-    }
-
-    const course = await Course.create({
-      title,
-      description,
-      tags,
-      creator: req.user._id,
-    });
-
-    return res.status(201).json(course);
-  } catch (error) {
-    return next(error);
-  }
+const COURSE_OUTLINE = {
+  path: "modules",
+  select: "title lessons",
+  populate: {
+    path: "lessons",
+    select: "title isEnriched completedAt bookmarked lastOpenedAt quizBestScore quizAttempts",
+  },
 };
 
-exports.getMyCourses = async (req, res, next) => {
-  try {
-    const courses = await Course.find({ creator: req.user._id }).sort({ createdAt: -1 });
-    return res.json(courses);
-  } catch (error) {
-    return next(error);
-  }
-};
+function ownsCourse(course, userId) {
+  return String(course.creator) === String(userId);
+}
 
-exports.getCourseById = async (req, res, next) => {
-  try {
-    const course = await Course.findById(req.params.courseId).populate({
+async function getMyCourses(req, res) {
+  const courses = await Course.find({ creator: req.user._id })
+    .select("title description modules isPublic shareId createdAt")
+    .sort({ createdAt: -1 })
+    .populate(COURSE_OUTLINE)
+    .lean();
+
+  return res.json(courses);
+}
+
+async function getCourseById(req, res) {
+  const course = await Course.findById(req.params.courseId)
+    .select("title description modules isPublic shareId creator")
+    .populate(COURSE_OUTLINE)
+    .lean();
+
+  if (!course) return res.status(404).json({ error: "Course not found" });
+  if (!ownsCourse(course, req.user._id)) return res.status(403).json({ error: "Forbidden" });
+
+  delete course.creator;
+  return res.json(course);
+}
+
+async function getLessonView(req, res) {
+  const context = await getOwnedLesson(req.params.lessonId, req.user._id);
+  if (String(context.course._id) !== String(req.params.courseId)) {
+    return res.status(404).json({ error: "Lesson not found in this course" });
+  }
+
+  const course = await Course.findById(req.params.courseId)
+    .select("title description modules")
+    .populate(COURSE_OUTLINE)
+    .lean();
+
+  return res.json({
+    course,
+    lesson: context.lesson.toObject({ depopulate: true }),
+  });
+}
+
+async function deleteCourse(req, res) {
+  const course = await Course.findById(req.params.courseId);
+  if (!course) return res.status(404).json({ error: "Course not found" });
+  if (!ownsCourse(course, req.user._id)) return res.status(403).json({ error: "Forbidden" });
+
+  await deleteCourseRecords(course);
+
+  return res.json({ message: "Course deleted" });
+}
+
+async function updateLessonProgress(req, res) {
+  const { lesson } = await getOwnedLesson(req.params.lessonId, req.user._id);
+
+  if (req.body?.opened === true) lesson.lastOpenedAt = new Date();
+  if (typeof req.body?.completed === "boolean") {
+    lesson.completedAt = req.body.completed ? new Date() : null;
+  }
+  if (typeof req.body?.bookmarked === "boolean") {
+    lesson.bookmarked = req.body.bookmarked;
+  }
+  if (typeof req.body?.notes === "string") {
+    lesson.notes = req.body.notes.slice(0, 12000);
+  }
+
+  await lesson.save();
+  return res.json(lesson.toObject({ depopulate: true }));
+}
+
+async function saveQuizResult(req, res) {
+  const score = Number(req.body?.score);
+  if (!Number.isInteger(score) || score < 0 || score > 5) {
+    return res.status(400).json({ error: "Quiz score must be between 0 and 5" });
+  }
+
+  const { lesson } = await getOwnedLesson(req.params.lessonId, req.user._id);
+  lesson.quizAttempts = (lesson.quizAttempts || 0) + 1;
+  lesson.quizBestScore = Math.max(lesson.quizBestScore || 0, score);
+  lesson.lastOpenedAt = new Date();
+  await lesson.save();
+
+  return res.json(lesson.toObject({ depopulate: true }));
+}
+
+async function updateSharing(req, res) {
+  const course = await Course.findById(req.params.courseId);
+  if (!course) return res.status(404).json({ error: "Course not found" });
+  if (!ownsCourse(course, req.user._id)) return res.status(403).json({ error: "Forbidden" });
+
+  course.isPublic = req.body?.enabled === true;
+  if (course.isPublic && !course.shareId) course.shareId = crypto.randomUUID();
+  await course.save();
+
+  return res.json({ isPublic: course.isPublic, shareId: course.shareId });
+}
+
+async function getPublicCourse(req, res) {
+  const course = await Course.findOne({
+    shareId: req.params.shareId,
+    isPublic: true,
+  })
+    .select("title description modules updatedAt")
+    .populate({
       path: "modules",
-      populate: { path: "lessons" },
-    });
+      select: "title lessons",
+      populate: {
+        path: "lessons",
+        select: "title content language isEnriched",
+      },
+    })
+    .lean();
 
-    if (!course) return res.status(404).json({ error: "Course not found" });
-    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
+  if (!course) return res.status(404).json({ error: "Shared course not found" });
+  return res.json(course);
+}
 
-    return res.json(course);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-exports.addModuleToCourse = async (req, res, next) => {
-  try {
-    const title = sanitizeText(req.body?.title, 160);
-    if (!title) return res.status(400).json({ error: "Module title is required" });
-
-    const course = await Course.findById(req.params.courseId);
-    if (!course) return res.status(404).json({ error: "Course not found" });
-    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
-
-    const moduleDoc = await Module.create({ title, course: course._id });
-    course.modules.push(moduleDoc._id);
-    await course.save();
-
-    return res.status(201).json(moduleDoc);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-exports.addLessonToModule = async (req, res, next) => {
-  try {
-    const title = sanitizeText(req.body?.title, 160);
-    if (!title) return res.status(400).json({ error: "Lesson title is required" });
-
-    const moduleDoc = await Module.findById(req.params.moduleId).populate("course");
-    if (!moduleDoc) return res.status(404).json({ error: "Module not found" });
-    if (!moduleDoc.course) return res.status(404).json({ error: "Course not found" });
-    if (!ownsCourse(moduleDoc.course, req.user)) return res.status(403).json({ error: "Forbidden" });
-
-    const content = Array.isArray(req.body?.content)
-      ? req.body.content.map(normalizeContentBlock).filter(Boolean)
-      : [];
-
-    const lesson = await Lesson.create({ title, content, module: moduleDoc._id });
-    moduleDoc.lessons.push(lesson._id);
-    await moduleDoc.save();
-
-    return res.status(201).json(lesson);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-exports.addContentBlock = async (req, res, next) => {
-  try {
-    const block = normalizeContentBlock(req.body?.block);
-    if (!block) return res.status(400).json({ error: "A valid content block is required" });
-
-    const lesson = await Lesson.findById(req.params.lessonId).populate({
-      path: "module",
-      populate: { path: "course" },
-    });
-
-    if (!lesson) return res.status(404).json({ error: "Lesson not found" });
-    if (!lesson.module?.course) {
-      return res.status(404).json({ error: "Lesson is not attached to a valid course" });
-    }
-    if (!ownsCourse(lesson.module.course, req.user)) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    lesson.content.push(block);
-    lesson.markModified("content");
-    await lesson.save();
-
-    return res.json(lesson);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-exports.deleteCourse = async (req, res, next) => {
-  try {
-    const course = await Course.findById(req.params.courseId);
-    if (!course) return res.status(404).json({ error: "Course not found" });
-    if (!ownsCourse(course, req.user)) return res.status(403).json({ error: "Forbidden" });
-
-    const modules = await Module.find({ course: course._id }).select("_id");
-    const moduleIds = modules.map((moduleDoc) => moduleDoc._id);
-
-    await Lesson.deleteMany({ module: { $in: moduleIds } });
-    await Module.deleteMany({ course: course._id });
-    await course.deleteOne();
-
-    return res.json({ message: "Course deleted" });
-  } catch (error) {
-    return next(error);
-  }
+module.exports = {
+  deleteCourse,
+  getCourseById,
+  getLessonView,
+  getMyCourses,
+  getPublicCourse,
+  saveQuizResult,
+  updateLessonProgress,
+  updateSharing,
 };

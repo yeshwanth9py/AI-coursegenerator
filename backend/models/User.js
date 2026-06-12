@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Name is required"],
     trim: true,
+    maxlength: 100,
   },
   email: {
     type: String,
@@ -13,16 +14,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
+    maxlength: 254,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email is invalid"],
   },
-  password: { type: String },
-  auth0Id: { type: String, default: null },
-  picture: { type: String, default: null },
-  authProvider: {
-    type: String,
-    enum: ["local", "auth0"],
-    default: "local",
-  },
+  password: { type: String, maxlength: 128 },
+  auth0Id: { type: String, maxlength: 255 },
 }, { timestamps: true });
 
 userSchema.index({ auth0Id: 1 }, { unique: true, sparse: true });
@@ -30,8 +26,7 @@ userSchema.index({ auth0Id: 1 }, { unique: true, sparse: true });
 userSchema.pre("save", async function hashPassword() {
   if (!this.isModified("password") || !this.password) return;
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 userSchema.methods.matchPassword = function matchPassword(enteredPassword) {

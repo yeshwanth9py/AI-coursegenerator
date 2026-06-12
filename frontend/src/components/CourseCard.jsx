@@ -1,86 +1,56 @@
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Trash2, Clock, Tag } from 'lucide-react';
+import { Award, BookOpen, Trash2 } from 'lucide-react';
+import { courseProgress } from '../utils/courseProgress';
 
 export default function CourseCard({ course, onDelete }) {
   const navigate = useNavigate();
 
-  if (!course) return null;
-
-  const moduleCount = course.modules?.length || 0;
-  const createdDate = course.createdAt
-    ? new Date(course.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '';
+  const modules = course.modules?.length || 0;
+  const progress = courseProgress(course);
 
   return (
-    <div
-      onClick={() => navigate(`/course/${course._id}`)}
-      className="group relative glass-card p-6 cursor-pointer transition-all duration-300 hover:border-brand-500/30 hover:bg-slate-800/40 hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1"
-    >
-      <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-brand-500 to-purple-500 rounded-b opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center border border-brand-500/10 flex-shrink-0">
-          <BookOpen className="w-5 h-5 text-brand-400" />
-        </div>
+    <article className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+      <div className="flex items-start justify-between gap-4">
+        <button
+          type="button"
+          onClick={() => navigate(`/course/${course._id}`)}
+          className="min-w-0 flex-1 text-left"
+        >
+          <h3 className="font-semibold text-white">{course.title}</h3>
+          {course.description && (
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-400">
+              {course.description}
+            </p>
+          )}
+        </button>
 
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.(course._id);
-          }}
-          className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
+          type="button"
+          onClick={() => onDelete(course._id)}
+          className="rounded-md p-2 text-slate-500 hover:bg-slate-800 hover:text-rose-400"
           title="Delete course"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
 
-      <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-brand-200 transition-colors">
-        {course.title}
-      </h3>
-
-      {course.description && (
-        <p className="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed">
-          {course.description}
+      <div className="mt-5 flex items-center gap-4 border-t border-slate-800 pt-4 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <BookOpen className="h-3.5 w-3.5" />
+          {modules} modules
+        </span>
+        <span>{progress.totalLessons} lessons</span>
+        <span className="ml-auto">{progress.percentage}%</span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
+        <div className="h-full bg-brand-500" style={{ width: `${progress.percentage}%` }} />
+      </div>
+      {progress.percentage === 100 && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+          <Award className="h-3.5 w-3.5" />
+          Certificate unlocked
         </p>
       )}
-
-      {course.tags?.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {course.tags.slice(0, 3).map((tag, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/50"
-            >
-              <Tag className="w-3 h-3" />
-              {tag}
-            </span>
-          ))}
-          {course.tags.length > 3 && (
-            <span className="text-xs text-slate-500 px-2 py-1">
-              +{course.tags.length - 3} more
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between pt-4 border-t border-slate-800/60">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>{moduleCount} module{moduleCount !== 1 ? 's' : ''}</span>
-        </div>
-
-        {createdDate && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <Clock className="w-3.5 h-3.5" />
-            <span>{createdDate}</span>
-          </div>
-        )}
-      </div>
-    </div>
+    </article>
   );
 }

@@ -1,242 +1,92 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Tag,
-  Clock,
-  Layers,
-  FileText,
-  CheckCircle,
-} from 'lucide-react';
-import LoadingSpinner from '../components/Ui/LoadingSpinner';
-import api from '../utils/api';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Bookmark, CheckCircle2, Circle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CertificateProgress from '../components/CertificateProgress';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ShareCourseButton from '../components/ShareCourseButton';
+import api from '../utils/api';
 
 export default function CourseOverviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expandedModules, setExpandedModules] = useState({});
 
   useEffect(() => {
-    let cancelled = false;
+    let active = true;
 
-    const fetchCourse = async () => {
-      setLoading(true);
-
-      try {
-        const { data } = await api.get(`/courses/${id}`);
-        if (cancelled) return;
-
-        setCourse(data);
-
-        const expanded = {};
-        data.modules?.forEach((moduleDoc) => {
-          expanded[moduleDoc._id] = true;
-        });
-        setExpandedModules(expanded);
-      } catch {
-        if (!cancelled) toast.error('Failed to load course');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchCourse();
+    api.get(`/courses/${id}`)
+      .then(({ data }) => {
+        if (active) setCourse(data);
+      })
+      .catch(() => toast.error('Failed to load course'))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
     return () => {
-      cancelled = true;
+      active = false;
     };
   }, [id]);
 
-  const toggleModule = (moduleId) => {
-    setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner text="Loading course..." />
-      </div>
-    );
-  }
-
-  if (!course) {
-    return (
-      <div className="px-4 lg:px-8 py-12 text-center">
-        <p className="text-slate-400 text-lg">Course not found.</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 transition-colors text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </button>
-      </div>
-    );
-  }
-
-  const totalLessons = course.modules?.reduce(
-    (sum, mod) => sum + (mod.lessons?.length || 0), 0
-  ) || 0;
-
-  const enrichedCount = course.modules?.reduce(
-    (sum, mod) => sum + (mod.lessons?.filter(l => l.isEnriched || l.content?.length > 0).length || 0), 0
-  ) || 0;
-
-  const createdDate = course.createdAt
-    ? new Date(course.createdAt).toLocaleDateString('en-US', {
-        month: 'long', day: 'numeric', year: 'numeric',
-      })
-    : '';
+  if (loading) return <LoadingSpinner text="Loading course..." />;
+  if (!course) return <p className="py-20 text-center text-slate-400">Course not found.</p>;
 
   return (
-    <div className="px-4 lg:px-8 py-8 animate-fade-in">
-      <div className="flex items-center gap-2 text-xs text-slate-500 mb-8">
-        <button
-          onClick={() => navigate('/')}
-          className="hover:text-white transition-colors flex items-center gap-1"
-        >
-          <ArrowLeft className="w-3 h-3" />
-          Home
-        </button>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-slate-300 truncate">{course.title}</span>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <button onClick={() => navigate('/')} className="btn-secondary mb-6">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+
+      <header className="mb-8 border-b border-slate-800 pb-8">
+        <h1 className="text-3xl font-semibold text-white">{course.title}</h1>
+        {course.description && <p className="mt-3 text-slate-400">{course.description}</p>}
+        <div className="mt-6">
+          <ShareCourseButton course={course} onUpdate={setCourse} />
+        </div>
+      </header>
+
+      <div className="mb-8">
+        <CertificateProgress
+          course={course}
+          onContinue={(lessonId) => navigate(`/course/${id}/lesson/${lessonId}`)}
+          onViewCertificate={() => navigate(`/course/${id}/certificate`)}
+        />
       </div>
 
-      <div className="glass-card p-8 mb-8">
-        <div className="flex items-start gap-5 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center border border-brand-500/10 flex-shrink-0">
-            <BookOpen className="w-7 h-7 text-brand-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-              {course.title}
-            </h1>
-            {course.description && (
-              <p className="text-slate-400 leading-relaxed max-w-3xl">
-                {course.description}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {course.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {course.tags.map((tag, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/50"
-              >
-                <Tag className="w-3 h-3" />
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-6 pt-4 border-t border-slate-800/60">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Layers className="w-4 h-4 text-brand-400" />
-            <span>
-              {course.modules?.length || 0} module{(course.modules?.length || 0) !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <FileText className="w-4 h-4 text-purple-400" />
-            <span>
-              {totalLessons} lesson{totalLessons !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
-            <span>{enrichedCount}/{totalLessons} enriched</span>
-          </div>
-          {createdDate && (
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <span>Created {createdDate}</span>
+      <div className="space-y-5">
+        {course.modules?.map((moduleDoc, moduleIndex) => (
+          <section key={moduleDoc._id}>
+            <h2 className="mb-2 font-medium text-white">{moduleIndex + 1}. {moduleDoc.title}</h2>
+            <div className="overflow-hidden rounded-lg border border-slate-800">
+              {moduleDoc.lessons?.map((lesson, lessonIndex) => (
+                <button
+                  key={lesson._id}
+                  onClick={() => navigate(`/course/${id}/lesson/${lesson._id}`)}
+                  className="flex w-full items-center gap-3 border-b border-slate-800 px-4 py-3 text-left text-sm text-slate-300 last:border-b-0 hover:bg-slate-900"
+                >
+                  <span className="w-5 text-slate-600">{lessonIndex + 1}</span>
+                  <span className="flex-1">{lesson.title}</span>
+                  {lesson.bookmarked && <Bookmark className="h-4 w-4 text-brand-400" />}
+                  {lesson.quizBestScore > 0 && (
+                    <span className="text-xs text-slate-500">{lesson.quizBestScore}/5</span>
+                  )}
+                  <span className={`flex items-center gap-1.5 text-xs ${
+                    lesson.completedAt ? 'text-emerald-400' : 'text-slate-600'
+                  }`}
+                  >
+                    {lesson.completedAt
+                      ? <CheckCircle2 className="h-4 w-4" />
+                      : <Circle className="h-4 w-4" />}
+                    {lesson.completedAt ? 'Complete' : 'Not complete'}
+                  </span>
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {course.modules?.map((mod, modIndex) => (
-          <div key={mod._id} className="glass-card overflow-hidden">
-            <button
-              onClick={() => toggleModule(mod._id)}
-              className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-800/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-sm font-bold text-brand-400 border border-brand-500/10">
-                  {modIndex + 1}
-                </span>
-                <h3 className="text-base font-semibold text-white text-left">
-                  {mod.title}
-                </h3>
-                <span className="text-xs text-slate-500 ml-2">
-                  {mod.lessons?.length || 0} lesson{(mod.lessons?.length || 0) !== 1 ? 's' : ''}
-                </span>
-              </div>
-              {expandedModules[mod._id]
-                ? <ChevronDown className="w-5 h-5 text-slate-500" />
-                : <ChevronRight className="w-5 h-5 text-slate-500" />
-              }
-            </button>
-
-            {expandedModules[mod._id] && (
-              <div className="border-t border-slate-800/60">
-                {mod.lessons?.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic px-6 py-4">
-                    No lessons in this module yet.
-                  </p>
-                ) : (
-                  mod.lessons?.map((lesson, lessonIndex) => {
-                    const isEnriched = lesson.isEnriched || lesson.content?.length > 0;
-                    return (
-                      <div
-                        key={lesson._id}
-                        className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800/30 last:border-b-0 hover:bg-slate-800/20 transition-colors group"
-                      >
-                        <button
-                          onClick={() => navigate(`/course/${id}/lesson/${lesson._id}`)}
-                          className="flex items-center gap-3 flex-1 min-w-0 text-left"
-                        >
-                          <span className="w-6 h-6 rounded-md bg-slate-800/60 flex items-center justify-center text-xs font-medium text-slate-500 border border-slate-700/50 flex-shrink-0">
-                            {lessonIndex + 1}
-                          </span>
-                          <span className="text-sm text-slate-300 group-hover:text-white transition-colors truncate">
-                            {lesson.title}
-                          </span>
-                          {isEnriched && (
-                            <span className="ml-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
-                              <CheckCircle className="w-2.5 h-2.5" />
-                              Enriched
-                            </span>
-                          )}
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
-          </div>
+          </section>
         ))}
-
-        {(!course.modules || course.modules.length === 0) && (
-          <div className="text-center py-16 glass-card">
-            <Layers className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-300 mb-2">No modules yet</h3>
-            <p className="text-sm text-slate-500">This course does not have any modules yet.</p>
-          </div>
-        )}
       </div>
     </div>
   );

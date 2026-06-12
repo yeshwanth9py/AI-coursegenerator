@@ -1,132 +1,74 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import toast from 'react-hot-toast';
-import api, { clearAuthToken, setAuthToken } from '../utils/api';
+import api from '../utils/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const {
-    isLoading: auth0Loading,
-    isAuthenticated: auth0Authenticated,
-    loginWithRedirect,
-    logout: auth0Logout,
     getAccessTokenSilently,
+    isAuthenticated: hasAuth0Session,
+    isLoading: auth0Loading,
+    loginWithRedirect,
+    logout: logoutFromAuth0,
   } = useAuth0();
-
   const [user, setUser] = useState(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [auth0Syncing, setAuth0Syncing] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const [syncingAuth0, setSyncingAuth0] = useState(false);
   const auth0SyncStarted = useRef(false);
-  const userRef = useRef(null);
 
-  const updateUser = useCallback((nextUser) => {
-    userRef.current = nextUser;
-    setUser(nextUser);
+  useEffect(() => {
+    api.get('/auth/me')
+      .then(({ data }) => setUser(data))
+      .catch(() => setUser(null))
+      .finally(() => setLoadingSession(false));
   }, []);
 
-  const login = useCallback(({ token, ...userData }) => {
-    setAuthToken(token);
-    updateUser(userData);
-  }, [updateUser]);
-
   useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const { data } = await api.get('/auth/me');
-        updateUser(data);
-      } catch (error) {
-        if (error.response?.status === 401) clearAuthToken();
-        if (!userRef.current) updateUser(null);
-      } finally {
-        setSessionLoading(false);
-      }
-    };
-
-    loadSession();
-  }, [updateUser]);
-
-  useEffect(() => {
-    if (!auth0Authenticated) {
+    if (!hasAuth0Session) {
       auth0SyncStarted.current = false;
       return;
     }
+    if (loadingSession || user || auth0SyncStarted.current) return;
 
-    if (sessionLoading || user || auth0SyncStarted.current) return;
+    auth0SyncStarted.current = true;
+    setSyncingAuth0(true);
 
-    const syncAuth0User = async () => {
-      auth0SyncStarted.current = true;
-      setAuth0Syncing(true);
-
-      try {
-        const accessToken = await getAccessTokenSilently();
-        const { data } = await api.post('/auth/auth0-sync', {}, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        login(data);
-      } catch (error) {
-        console.error('Auth0 sync failed:', error);
+    getAccessTokenSilently()
+      .then((token) => api.post('/auth/auth0-sync', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      }))
+      .then(({ data }) => setUser(data))
+      .catch((error) => {
         auth0SyncStarted.current = false;
-        toast.error(error.response?.data?.error || error.message || 'Could not finish Auth0 login');
-      } finally {
-        setAuth0Syncing(false);
-      }
-    };
+        toast.error(error.response?.data?.error || 'Could not finish Google login');
+      })
+      .finally(() => setSyncingAuth0(false));
+  }, [getAccessTokenSilently, hasAuth0Session, loadingSession, user]);
 
-    syncAuth0User();
-  }, [auth0Authenticated, getAccessTokenSilently, login, sessionLoading, user]);
-
-  useEffect(() => {
-    const interceptorId = api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        const isSessionCheck = error.config?.url?.includes('/auth/me');
-        const isLoginRequest = error.config?.url?.includes('/auth/login');
-
-        if (error.response?.status === 401 && !isSessionCheck && !isLoginRequest) {
-          clearAuthToken();
-          updateUser(null);
-        }
-        return Promise.reject(error);
-      },
-    );
-
-    return () => api.interceptors.response.eject(interceptorId);
-  }, [updateUser]);
-
-  const logout = useCallback(async () => {
+  async function logout() {
     await api.post('/auth/logout').catch(() => {});
-    clearAuthToken();
-    updateUser(null);
+    setUser(null);
 
-    if (auth0Authenticated) {
-      auth0Logout({ logoutParams: { returnTo: `${window.location.origin}/login` } });
+    if (hasAuth0Session) {
+      logoutFromAuth0({ logoutParams: { returnTo: `${window.location.origin}/login` } });
     }
-  }, [auth0Authenticated, auth0Logout, updateUser]);
+  }
 
-  const loginWithAuth0 = useCallback(() => {
-    loginWithRedirect();
-  }, [loginWithRedirect]);
+  const value = {
+    isAuthenticated: Boolean(user),
+    loading: loadingSession || auth0Loading || syncingAuth0,
+    user,
+    login: setUser,
+    logout,
+    loginWithAuth0: () => loginWithRedirect(),
+    signupWithAuth0: () => loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } }),
+  };
 
-  const signupWithAuth0 = useCallback(() => {
-    loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } });
-  }, [loginWithRedirect]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-  const loading = sessionLoading || auth0Loading || auth0Syncing;
-
-  return (
-    <AuthContext.Provider value={{
-      isAuthenticated: Boolean(user),
-      loading,
-      user,
-      login,
-      logout,
-      loginWithAuth0,
-      signupWithAuth0,
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}

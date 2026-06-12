@@ -1,224 +1,143 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Trophy, RotateCcw, Loader2, Brain } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import api from '../../utils/api';
 
-export default function QuizPanel({ lessonId }) {
+export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) {
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [revealed, setRevealed] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answer, setAnswer] = useState(null);
+  const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [savingResult, setSavingResult] = useState(false);
+  const [error, setError] = useState('');
+  const panelClass = embedded
+    ? ''
+    : 'mt-8 rounded-xl border border-slate-800 bg-slate-900 p-6';
 
-  const fetchQuiz = async () => {
+  async function generateQuiz() {
     setLoading(true);
-    setError(null);
+    setError('');
 
     try {
-      const { data } = await api.post(`/courses/lessons/${lessonId}/generate-quiz`);
+      const { data } = await api.post(`/courses/lessons/${lesson._id}/generate-quiz`);
       setQuestions(data.questions || []);
-      setCurrentIndex(0);
+      setIndex(0);
+      setAnswer(null);
+      setChecked(false);
       setScore(0);
-      setFinished(false);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to generate quiz');
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Could not generate quiz.');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSelect = (index) => {
-    if (revealed) return;
-    setSelectedAnswer(index);
-  };
+  function checkAnswer() {
+    if (answer === null) return;
+    if (answer === questions[index].correctAnswer) setScore((current) => current + 1);
+    setChecked(true);
+  }
 
-  const handleCheck = () => {
-    if (selectedAnswer === null) return;
-    setRevealed(true);
-
-    const current = questions[currentIndex];
-    if (selectedAnswer === current.correctAnswer) {
-      setScore(prev => prev + 1);
+  async function nextQuestion() {
+    if (index === questions.length - 1) {
+      setSavingResult(true);
+      try {
+        const { data } = await api.post(`/courses/lessons/${lesson._id}/quiz-result`, { score });
+        onLessonUpdate(data);
+      } catch {
+        setError('Quiz finished, but the score could not be saved.');
+      } finally {
+        setSavingResult(false);
+      }
     }
-  };
 
-  const handleNext = () => {
-    if (currentIndex + 1 >= questions.length) {
-      setFinished(true);
-    } else {
-      setCurrentIndex(prev => prev + 1);
-      setSelectedAnswer(null);
-      setRevealed(false);
-    }
-  };
-
-  const handleRetake = () => {
-    setCurrentIndex(0);
-    setSelectedAnswer(null);
-    setRevealed(false);
-    setScore(0);
-    setFinished(false);
-  };
-
-  if (questions.length === 0 && !loading && !error) {
-    return (
-      <div className="glass-card p-8 text-center mt-8">
-        <Brain className="w-12 h-12 text-brand-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-white mb-2">Quick Quiz</h3>
-        <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">
-          Test your understanding with AI-generated questions based on this lesson.
-        </p>
-        <button onClick={fetchQuiz} className="btn-primary">
-          Generate Quiz
-        </button>
-      </div>
-    );
+    setIndex((current) => current + 1);
+    setAnswer(null);
+    setChecked(false);
   }
 
   if (loading) {
     return (
-      <div className="glass-card p-8 text-center mt-8">
-        <Loader2 className="w-8 h-8 text-brand-400 animate-spin mx-auto mb-3" />
-        <p className="text-slate-400 text-sm">Generating quiz questions...</p>
+      <div className={`${panelClass} flex items-center gap-3 text-slate-400`}>
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Generating quiz...
       </div>
     );
   }
 
-  if (error) {
+  if (!questions.length) {
     return (
-      <div className="glass-card p-8 text-center mt-8">
-        <p className="text-rose-400 mb-4">{error}</p>
-        <button onClick={fetchQuiz} className="btn-secondary">
-          Try Again
+      <div className={panelClass}>
+        <h2 className="font-semibold text-white">Quick quiz</h2>
+        <p className="mt-2 text-sm text-slate-500">{error || 'Generate five questions from this lesson.'}</p>
+        {lesson.quizAttempts > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            Best score: {lesson.quizBestScore}/5 across {lesson.quizAttempts} attempts
+          </p>
+        )}
+        <button type="button" onClick={generateQuiz} className="btn-primary mt-4">
+          Generate quiz
         </button>
       </div>
     );
   }
 
-  if (finished) {
-    const percentage = Math.round((score / questions.length) * 100);
-    const emoji = percentage >= 80 ? '🎉' : percentage >= 50 ? '👍' : '📚';
-
+  if (index >= questions.length) {
     return (
-      <div className="glass-card p-8 text-center mt-8">
-        <div className="text-5xl mb-4">{emoji}</div>
-        <Trophy className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-        <h3 className="text-2xl font-bold text-white mb-2">
-          {score} / {questions.length}
-        </h3>
-        <p className="text-slate-400 mb-1">{percentage}% correct</p>
-        <p className="text-sm text-slate-500 mb-6">
-          {percentage >= 80
-            ? 'Excellent work! You have a strong grasp of this material.'
-            : percentage >= 50
-            ? 'Good effort! Review the lesson to strengthen weak areas.'
-            : 'Keep studying! Review the lesson and try again.'}
-        </p>
-        <div className="flex items-center justify-center gap-3">
-          <button onClick={handleRetake} className="btn-secondary">
-            <RotateCcw className="w-4 h-4" />
-            Retake Quiz
-          </button>
-          <button onClick={fetchQuiz} className="btn-primary">
-            New Questions
-          </button>
-        </div>
+      <div className={panelClass}>
+        <h2 className="font-semibold text-white">Quiz complete</h2>
+        <p className="mt-2 text-slate-400">You scored {score} out of {questions.length}.</p>
+        {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+        <button type="button" onClick={generateQuiz} className="btn-secondary mt-4">
+          Generate new questions
+        </button>
       </div>
     );
   }
 
-  const question = questions[currentIndex];
+  const question = questions[index];
 
   return (
-    <div className="glass-card overflow-hidden mt-8">
-      <div className="h-1 bg-slate-800">
-        <div
-          className="h-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500"
-          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-        />
-      </div>
+    <div className={panelClass}>
+      <p className="text-xs text-slate-500">Question {index + 1} of {questions.length}</p>
+      <h2 className="mt-3 font-medium text-white">{question.question}</h2>
 
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Question {currentIndex + 1} of {questions.length}
-          </span>
-          <span className="text-xs text-brand-400 font-medium">
-            Score: {score}/{currentIndex + (revealed ? 1 : 0)}
-          </span>
-        </div>
+      <div className="mt-5 space-y-2">
+        {question.options.map((option, optionIndex) => {
+          const correct = checked && optionIndex === question.correctAnswer;
+          const wrong = checked && answer === optionIndex && !correct;
+          let optionClass = 'border-slate-700 text-slate-300';
 
-        <p className="text-base font-medium text-white mb-5 leading-relaxed">
-          {question.question}
-        </p>
+          if (correct) optionClass = 'border-emerald-500 text-emerald-300';
+          else if (wrong) optionClass = 'border-rose-500 text-rose-300';
+          else if (answer === optionIndex) optionClass = 'border-brand-500 text-white';
 
-        <div className="space-y-2.5 mb-5">
-          {(question.options || []).map((option, idx) => {
-            const isSelected = selectedAnswer === idx;
-            const isCorrect = idx === question.correctAnswer;
-            const optionText = typeof option === 'string' ? option : option.text || '';
-
-            let classes = 'w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-sm ';
-
-            if (revealed) {
-              if (isCorrect) {
-                classes += 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300';
-              } else if (isSelected && !isCorrect) {
-                classes += 'border-rose-500/40 bg-rose-500/10 text-rose-300';
-              } else {
-                classes += 'border-slate-700/30 bg-slate-800/30 text-slate-500';
-              }
-            } else {
-              classes += isSelected
-                ? 'border-brand-500/40 bg-brand-500/10 text-brand-200'
-                : 'border-slate-700/50 bg-slate-800/30 text-slate-300 hover:border-slate-600 hover:bg-slate-800/60 cursor-pointer';
-            }
-
-            return (
-              <button
-                key={idx}
-                onClick={() => handleSelect(idx)}
-                className={classes}
-                disabled={revealed}
-              >
-                <span className="w-6 h-6 rounded-full border border-current flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                  {String.fromCharCode(65 + idx)}
-                </span>
-                <span className="flex-1">{optionText}</span>
-                {revealed && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />}
-                {revealed && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-
-        {revealed && question.explanation && (
-          <div className="mb-5 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
-            <p className="text-sm text-slate-300">
-              <span className="font-semibold text-brand-400">Explanation: </span>
-              {question.explanation}
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          {!revealed ? (
+          return (
             <button
-              onClick={handleCheck}
-              disabled={selectedAnswer === null}
-              className="btn-primary disabled:opacity-40"
+              key={option}
+              type="button"
+              onClick={() => !checked && setAnswer(optionIndex)}
+              className={`w-full rounded-lg border p-3 text-left text-sm ${optionClass}`}
             >
-              Check Answer
+              {option}
             </button>
-          ) : (
-            <button onClick={handleNext} className="btn-primary">
-              {currentIndex + 1 >= questions.length ? 'See Results' : 'Next Question'}
-            </button>
-          )}
-        </div>
+          );
+        })}
       </div>
+
+      {checked && question.explanation && (
+        <p className="mt-4 text-sm text-slate-400">{question.explanation}</p>
+      )}
+
+      <button
+        type="button"
+        onClick={checked ? nextQuestion : checkAnswer}
+        disabled={answer === null || savingResult}
+        className="btn-primary mt-5"
+      >
+        {savingResult ? 'Saving result...' : checked ? 'Next' : 'Check answer'}
+      </button>
     </div>
   );
 }

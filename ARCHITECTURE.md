@@ -15,24 +15,28 @@ React frontend -> Express API -> MongoDB
 - The session token is stored in an HTTP-only cookie.
 - Protected routes load the user before reading or changing courses.
 
-## AI Request Protection
+## AI Requests
 
-AI calls are more expensive and slower than normal API calls, so two small protections are used:
+- `groqService.js` contains the small amount of provider-specific request and error handling.
+- `courseGeneration.js`, `lessonGeneration.js`, and `studyGeneration.js` keep each AI task focused.
+- Lesson depth changes the requested content size. A short lesson is retried once.
+- Flashcards and practice labs are generated on demand and are not stored.
 
-- `rateLimiter.js` limits API requests by IP address.
-- `asyncQueue.js` limits how many Groq requests run at the same time.
+## Learning Data
 
-Both are stored in memory. This is enough for one free-tier backend instance. If the app later runs on multiple backend instances, Redis would be useful for sharing this state.
+- Lesson documents store private notes, bookmarks, completion dates, recent activity, and quiz results.
+- The dashboard derives progress and resume-learning information from those lesson records.
+- Public course links use a separate read-only endpoint that excludes private learning data.
+- Lesson pages fetch one full lesson plus a lightweight course outline instead of downloading every lesson body.
 
 ## Frontend
 
 - `App.jsx` defines public and protected routes.
 - `utils/api.js` provides one Axios client for backend requests.
+- `utils/courseProgress.js` contains the shared progress calculations used by dashboards and certificates.
 - Vite environment variables hold the public API URL and Auth0 configuration.
-- The sidebar loads the user's available courses.
 
-## Interview Summary
+## Video Suggestions
 
-> I kept the architecture intentionally simple for the current scale. I added rate limiting and a small in-process queue specifically around expensive AI work. If usage grew, I would move queue and rate-limit state to Redis and run AI jobs in separate workers.
-
-For the complete interview walkthrough, see [INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md).
+- `youtubeService.js` searches the YouTube Data API using `YOUTUBE_API_KEY`.
+- Video suggestions run directly from the lesson page and are appended to the lesson.

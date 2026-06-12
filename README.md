@@ -1,20 +1,21 @@
 # CourseAI
 
-CourseAI is a full-stack learning workspace that generates structured courses, multilingual lessons, quizzes, AI tutor responses, and relevant embedded videos.
-
-The project is designed to demonstrate practical product engineering and system-design fundamentals without requiring paid infrastructure.
+CourseAI generates structured courses, multilingual lessons, quizzes, tutor responses, and relevant videos.
 
 ## Highlights
 
-- React and Vite frontend with protected routes and responsive course navigation
+- React and Vite frontend with protected routes
 - Express API with MongoDB persistence and ownership authorization
 - Auth0 social login plus local email/password authentication
 - HTTP-only cookie sessions and backend verification of Auth0 access tokens
-- Groq-powered course, lesson, quiz, tutor, and video-query generation
-- Custom in-memory rate limiter for API requests
-- Small in-process queue that prevents too many simultaneous AI calls
+- Groq-powered course, lesson, quiz, and tutor generation
+- AI-generated flashcards and practical lesson labs
+- YouTube lesson video suggestions
+- Straightforward persistence for generated modules and lessons
 - Multilingual lesson generation
-- Lint, syntax-check, and production-build verification scripts
+- Progress tracking, resume learning, bookmarks, notes, and quiz analytics
+- Privacy-safe public course sharing
+- Printable completion certificates
 
 ## Local Setup
 
@@ -38,23 +39,9 @@ npm run dev
 
 ```powershell
 cd backend
-npm run check
+npm run lint
 
 cd ../frontend
 npm run build
 npm run lint
 ```
-
-Automated test coverage is a current improvement area; see
-[INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md#38-testing-strategy).
-
-## Important Security Note
-
-All `VITE_*` variables are public because Vite includes them in the browser bundle. Auth0 domain/client IDs and the API base URL are public configuration, not secrets.
-
-Never put `MONGO_URI`, `JWT_SECRET`, `GROQ_API_KEY`, or `YOUTUBE_API_KEY` in frontend environment files.
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for a short architecture summary.
-
-See [INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md) for an in-depth walkthrough,
-tradeoffs, system-design improvements, and interview questions.

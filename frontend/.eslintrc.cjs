@@ -9,7 +9,7 @@ module.exports = {
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
   ],
-  ignorePatterns: ["dist", ".verify-dist", "vite.config.js.timestamp-*.mjs"],
+  ignorePatterns: ["dist", "vite.config.js.timestamp-*.mjs"],
   parserOptions: {
     ecmaVersion: "latest",
     sourceType: "module",
