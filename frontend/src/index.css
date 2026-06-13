@@ -335,6 +335,161 @@ select:focus-visible {
   transform-origin: left;
 }
 
+.auth-stage {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(79, 70, 229, 0.16), transparent 26rem),
+    radial-gradient(circle at 78% 85%, rgba(6, 182, 212, 0.1), transparent 28rem),
+    linear-gradient(145deg, #050713, #070a18 55%, #050713);
+}
+
+.auth-circuit {
+  background-image:
+    linear-gradient(rgba(129, 140, 248, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(129, 140, 248, 0.055) 1px, transparent 1px);
+  background-position: center;
+  background-size: 52px 52px;
+  mask-image: radial-gradient(circle at center, black 22%, transparent 78%);
+  animation: circuitDrift 22s linear infinite;
+}
+
+.auth-particles {
+  opacity: 0.45;
+  background-image:
+    radial-gradient(circle, rgba(129, 140, 248, 0.7) 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(34, 211, 238, 0.6) 1px, transparent 1.5px);
+  background-position: 0 0, 30px 30px;
+  background-size: 68px 68px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+  animation: particleDrift 24s linear infinite;
+}
+
+.auth-aurora {
+  width: 34rem;
+  height: 34rem;
+  border-radius: 999px;
+  filter: blur(110px);
+  opacity: 0.23;
+  will-change: transform;
+}
+
+.auth-aurora-one {
+  top: -18rem;
+  left: 18%;
+  background: #7c3aed;
+  animation: auroraOne 13s ease-in-out infinite alternate;
+}
+
+.auth-aurora-two {
+  right: -18rem;
+  bottom: -14rem;
+  background: #0891b2;
+  animation: auroraTwo 16s ease-in-out infinite alternate;
+}
+
+.auth-topic-orb {
+  animation: topicFloat 6s ease-in-out infinite;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.auth-workspace {
+  transform: perspective(1200px) rotateX(1.5deg) rotateY(-1.5deg);
+  animation: workspaceFloat 8s ease-in-out infinite;
+}
+
+.auth-workspace::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.35;
+  background: linear-gradient(105deg, transparent 32%, rgba(129, 140, 248, 0.08) 48%, transparent 64%);
+  transform: translateX(-100%);
+  animation: workspaceShine 7s 2s ease-in-out infinite;
+}
+
+.auth-code-line {
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  animation: codeType 0.8s steps(34, end) forwards;
+}
+
+.auth-code-cursor {
+  display: inline-block;
+  width: 0.45rem;
+  height: 1rem;
+  border-radius: 2px;
+  background: #818cf8;
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.8);
+  animation: cursorBlink 0.8s steps(1, end) infinite;
+}
+
+.auth-array-cell {
+  animation: arrayScan 2.45s ease-in-out infinite;
+}
+
+@keyframes circuitDrift {
+  from { background-position: 0 0; }
+  to { background-position: 104px 52px; }
+}
+
+@keyframes particleDrift {
+  from { background-position: 0 0, 30px 30px; }
+  to { background-position: 68px 136px, 98px 166px; }
+}
+
+@keyframes auroraOne {
+  from { transform: translate3d(-5%, -4%, 0) scale(0.9); }
+  to { transform: translate3d(20%, 18%, 0) scale(1.18); }
+}
+
+@keyframes auroraTwo {
+  from { transform: translate3d(0, 0, 0) scale(0.9); }
+  to { transform: translate3d(-26%, -20%, 0) scale(1.16); }
+}
+
+@keyframes topicFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); opacity: 0.6; }
+  50% { transform: translateY(-10px) rotate(1deg); opacity: 1; }
+}
+
+@keyframes workspaceFloat {
+  0%, 100% { transform: perspective(1200px) rotateX(1.5deg) rotateY(-1.5deg) translateY(0); }
+  50% { transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(-7px); }
+}
+
+@keyframes workspaceShine {
+  0%, 35% { transform: translateX(-100%); }
+  65%, 100% { transform: translateX(100%); }
+}
+
+@keyframes codeType {
+  from { width: 0; opacity: 0.35; }
+  to { width: 100%; opacity: 1; }
+}
+
+@keyframes cursorBlink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+@keyframes arrayScan {
+  0%, 18%, 100% {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.035);
+    color: #94a3b8;
+    transform: translateY(0);
+  }
+  25%, 48% {
+    border-color: rgba(34, 211, 238, 0.4);
+    background: rgba(34, 211, 238, 0.12);
+    color: #a5f3fc;
+    transform: translateY(-3px);
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.13);
+  }
+}
+
 @media print {
   body {
     background: white;
