@@ -233,6 +233,9 @@ You are a tutor for "${lesson.title}" in "${moduleDoc.title}" from "${course.tit
 Use this lesson when answering:
 ${lessonText(lesson, 2000) || "No detailed lesson content is available yet."}
 Answer clearly and in the same language as the student.
+Lead with a direct answer, then add only the detail needed to teach it well.
+Format longer answers with short Markdown paragraphs, bullets, or numbered steps.
+Use fenced code blocks for code. Avoid oversized headings and long walls of text.
       `.trim(),
     },
     ...recentHistory,
