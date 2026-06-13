@@ -1,5 +1,6 @@
 const {
   answerLessonQuestion,
+  createLessonContent,
   streamLessonContent,
 } = require("../services/lessonGeneration");
 const { createCourseOutline } = require("../services/courseGeneration");
@@ -12,21 +13,6 @@ const { saveGeneratedCourse } = require("../services/coursePersistence");
 const { getOwnedLesson } = require("../services/lessonAccessService");
 const { findLessonVideos } = require("../services/youtubeService");
 const VALID_DEPTHS = new Set(["brief", "standard", "deep"]);
-
-function lessonGenerationOptions(body) {
-  const requestedDepth = String(body?.depth || "").trim().slice(0, 20);
-
-  return {
-    depth: VALID_DEPTHS.has(requestedDepth) ? requestedDepth : "standard",
-    language: String(body?.language || "").trim().slice(0, 80) || "English",
-  };
-}
-
-function lessonStreamErrorMessage(error) {
-  if (error.statusCode && error.statusCode < 500) return error.message;
-  if (error.statusCode === 502) return error.message;
-  return "Could not generate lesson content. Please try again.";
-}
 
 async function generateCourseContent(req, res) {
   const prompt = String(req.body?.prompt || "").trim().slice(0, 2000);
@@ -41,13 +27,30 @@ async function generateCourseContent(req, res) {
   return res.status(201).json(course);
 }
 
-async function generateLesson(req, res) {
+async function enrichLesson(req, res) {
   const context = await getOwnedLesson(req.params.lessonId, req.user._id);
-  const { depth, language } = lessonGenerationOptions(req.body);
+  const requestedDepth = String(req.body?.depth || "").trim().slice(0, 20);
+  const depth = VALID_DEPTHS.has(requestedDepth) ? requestedDepth : "standard";
+  const language = String(req.body?.language || "").trim().slice(0, 80) || "English";
 
+  context.lesson.content = await createLessonContent({ ...context, depth, language });
+  context.lesson.language = language;
+  context.lesson.isEnriched = true;
+  await context.lesson.save();
+
+  return res.json(context.lesson.toObject({ depopulate: true }));
+}
+
+async function enrichLessonStream(req, res) {
+  const context = await getOwnedLesson(req.params.lessonId, req.user._id);
+  const requestedDepth = String(req.body?.depth || "").trim().slice(0, 20);
+  const depth = VALID_DEPTHS.has(requestedDepth) ? requestedDepth : "standard";
+  const language = String(req.body?.language || "").trim().slice(0, 80) || "English";
+
+  // Set up SSE headers
   res.writeHead(200, {
-    "Content-Type": "text/event-stream; charset=utf-8",
-    "Cache-Control": "no-cache, no-transform",
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
     Connection: "keep-alive",
     "X-Accel-Buffering": "no",
   });
@@ -70,6 +73,7 @@ async function generateLesson(req, res) {
       },
     });
 
+    // Save to database
     context.lesson.content = blocks;
     context.lesson.language = language;
     context.lesson.isEnriched = true;
@@ -78,7 +82,7 @@ async function generateLesson(req, res) {
     sendEvent("done", context.lesson.toObject({ depopulate: true }));
   } catch (error) {
     sendEvent("error", {
-      error: lessonStreamErrorMessage(error),
+      error: error.message || "Failed to generate lesson content.",
     });
   } finally {
     if (!closed) res.end();
@@ -137,9 +141,10 @@ async function chatAboutLesson(req, res) {
 module.exports = {
   addSuggestedVideos,
   chatAboutLesson,
+  enrichLesson,
+  enrichLessonStream,
   generateCourseContent,
   generateFlashcards,
-  generateLesson,
   generatePracticeLab,
   generateQuiz,
 };

@@ -17,11 +17,9 @@ React frontend -> Express API -> MongoDB
 
 ## AI Requests
 
-- `groqService.js` contains the provider-specific request and error handling.
+- `groqService.js` contains the small amount of provider-specific request and error handling.
 - `courseGeneration.js`, `lessonGeneration.js`, and `studyGeneration.js` keep each AI task focused.
-- `lessonContent.js` validates generated blocks before a lesson is saved.
-- `contentBlockStreamParser.js` extracts complete block objects from streamed JSON.
-- Lesson depth changes the requested content size. Incomplete streamed lessons are rejected.
+- Lesson depth changes the requested content size. A short lesson is retried once.
 - Flashcards and practice labs are generated on demand and are not stored.
 
 ## Learning Data
@@ -35,7 +33,6 @@ React frontend -> Express API -> MongoDB
 
 - `App.jsx` defines public and protected routes.
 - `utils/api.js` provides one Axios client for backend requests.
-- `utils/lessonStream.js` owns the browser-side lesson streaming protocol.
 - `utils/courseProgress.js` contains the shared progress calculations used by dashboards and certificates.
 - Vite environment variables hold the public API URL and Auth0 configuration.
 

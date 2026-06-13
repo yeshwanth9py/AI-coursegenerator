@@ -32,8 +32,8 @@ export default function LoginPage() {
   return (
     <AuthLayout
       eyebrow="Welcome back"
-      title="Sign in to CourseAI"
-      description="Continue your courses and pick up where you left off."
+      title="Continue your learning journey"
+      description="Return to your personalized courses, practice, and progress."
       footer={(
         <>
           New to CourseAI?{' '}
