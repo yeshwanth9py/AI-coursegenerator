@@ -196,7 +196,7 @@ export default function AuthLayout({
 
         <div className="relative z-10 my-auto max-w-3xl py-8 animate-enter">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-300">
-            <Sparkles className="h-3.5 w-3.5" />
+            {/* <Sparkles className="h-3.5 w-3.5" /> */}
             Learn anything, built around you
           </div>
           <h2 className="gradient-text max-w-2xl font-display text-5xl font-extrabold leading-[1.04] tracking-[-0.055em] xl:text-6xl">
