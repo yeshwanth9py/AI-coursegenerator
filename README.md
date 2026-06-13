@@ -30,6 +30,8 @@ Most AI learning tools stop after returning a wall of generated text. CourseAI t
 
 ## Product Tour
 
+video explanation:- https://youtu.be/PB9uZic8KMg
+
 | Stage | Experience |
 | --- | --- |
 | **Create** | Describe a topic and receive a structured course containing modules and lessons. |
