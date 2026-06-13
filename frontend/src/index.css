@@ -386,9 +386,8 @@ select:focus-visible {
   animation: auroraTwo 16s ease-in-out infinite alternate;
 }
 
-.auth-topic-orb {
-  animation: topicFloat 6s ease-in-out infinite;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.auth-topic-chip {
+  animation: featureGlow 3s ease-in-out infinite;
 }
 
 .auth-workspace {
@@ -461,11 +460,6 @@ select:focus-visible {
 @keyframes auroraTwo {
   from { transform: translate3d(0, 0, 0) scale(0.9); }
   to { transform: translate3d(-26%, -20%, 0) scale(1.16); }
-}
-
-@keyframes topicFloat {
-  0%, 100% { transform: translateY(0) rotate(-1deg); opacity: 0.6; }
-  50% { transform: translateY(-10px) rotate(1deg); opacity: 1; }
 }
 
 @keyframes workspaceFloat {

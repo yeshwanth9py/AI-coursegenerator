@@ -20,10 +20,10 @@ const LEARNING_PATH = [
 ];
 
 const TOPICS = [
-  { icon: Code2, label: 'Software Development', position: 'left-[5%] top-[17%]', delay: '0s' },
-  { icon: LineChart, label: 'Business & Finance', position: 'right-[5%] top-[13%]', delay: '1.1s' },
-  { icon: Languages, label: 'Languages', position: 'right-[3%] bottom-[18%]', delay: '2.2s' },
-  { icon: Palette, label: 'Creative Skills', position: 'left-[4%] bottom-[11%]', delay: '3.3s' },
+  { icon: Code2, label: 'Development' },
+  { icon: LineChart, label: 'Business' },
+  { icon: Languages, label: 'Languages' },
+  { icon: Palette, label: 'Creative skills' },
 ];
 
 const COURSE_IDEAS = [
@@ -184,17 +184,6 @@ export default function AuthLayout({
       <div className="auth-aurora auth-aurora-two pointer-events-none absolute" />
       <div className="auth-particles pointer-events-none absolute inset-0" />
 
-      {TOPICS.map(({ icon: Icon, label, position, delay }) => (
-        <div
-          key={label}
-          className={`auth-topic-orb pointer-events-none absolute z-10 hidden items-center gap-2 rounded-full border border-white/[0.08] bg-[#0b1022]/60 px-3 py-2 text-[10px] font-semibold text-slate-400 backdrop-blur-xl xl:flex ${position}`}
-          style={{ animationDelay: delay }}
-        >
-          <Icon className="h-3.5 w-3.5 text-brand-300" />
-          {label}
-        </div>
-      ))}
-
       <section className="relative hidden min-h-screen overflow-hidden border-r border-white/[0.06] p-10 lg:flex lg:flex-col xl:p-14">
         <div className="auth-circuit pointer-events-none absolute inset-0 opacity-50" />
 
@@ -216,6 +205,19 @@ export default function AuthLayout({
           <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400 xl:text-base">
             CourseAI creates a complete learning journey for your goal, with clear lessons, hands-on practice, helpful videos, quizzes, and an AI tutor.
           </p>
+
+          <div className="mt-5 flex max-w-xl flex-wrap gap-2">
+            {TOPICS.map(({ icon: Icon, label }, index) => (
+              <span
+                key={label}
+                className="auth-topic-chip inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold text-slate-500"
+                style={{ animationDelay: `${index * 0.35}s` }}
+              >
+                <Icon className="h-3 w-3 text-brand-300" />
+                {label}
+              </span>
+            ))}
+          </div>
 
           <LearningStudio />
         </div>
