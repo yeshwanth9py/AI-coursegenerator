@@ -1,42 +1,25 @@
 import {
   AudioLines,
-  Gauge,
-  Languages,
-  Loader2,
   Pause,
   Play,
   RotateCcw,
   Square,
-  Volume2,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import api from '../../utils/api';
 import {
   extractNarration,
   matchingVoices,
-  SPEECH_LANGUAGES,
   speechLanguageCode,
   splitForSpeech,
 } from '../../utils/speech';
 
-const ORIGINAL_LANGUAGE = '__original__';
-const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5];
-
-export default function LessonAudioPlayer({ lesson, translationEnabled = true }) {
-  const sourceLanguage = lesson.language || 'English';
-  const originalNarration = useMemo(() => extractNarration(lesson), [lesson]);
-  const [narration, setNarration] = useState(originalNarration);
-  const [activeLanguage, setActiveLanguage] = useState(sourceLanguage);
-  const [targetLanguage, setTargetLanguage] = useState(ORIGINAL_LANGUAGE);
+export default function LessonAudioPlayer({ lesson }) {
+  const language = lesson.language || 'English';
+  const narration = useMemo(() => extractNarration(lesson), [lesson]);
   const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState('auto');
-  const [rate, setRate] = useState(1);
+  const [rate] = useState(1);
   const [status, setStatus] = useState('idle');
   const [currentChunk, setCurrentChunk] = useState(0);
-  const [translating, setTranslating] = useState(false);
-  const [error, setError] = useState('');
-  const translationCache = useRef(new Map());
-  const translationRequest = useRef(0);
   const playbackSession = useRef(0);
 
   const supported = typeof window !== 'undefined'
@@ -47,10 +30,12 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     () => narration.flatMap((chunk) => splitForSpeech(chunk)),
     [narration],
   );
+
   const languageVoices = useMemo(
-    () => matchingVoices(voices, activeLanguage),
-    [activeLanguage, voices],
+    () => matchingVoices(voices, language),
+    [language, voices],
   );
+
   const completedChunks = status === 'complete'
     ? speechQueue.length
     : currentChunk + Number(status === 'playing' || status === 'paused');
@@ -70,7 +55,6 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     }
 
     return () => {
-      translationRequest.current += 1;
       playbackSession.current += 1;
       window.speechSynthesis.cancel();
       if (typeof window.speechSynthesis.removeEventListener === 'function') {
@@ -99,12 +83,11 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     }
 
     const utterance = new SpeechSynthesisUtterance(speechQueue[index]);
-    utterance.lang = speechLanguageCode(activeLanguage);
+    utterance.lang = speechLanguageCode(language);
     utterance.rate = rate;
     utterance.pitch = 1;
 
-    const voice = voices.find((item) => item.voiceURI === selectedVoice)
-      || languageVoices[0];
+    const voice = languageVoices[0];
     if (voice) utterance.voice = voice;
 
     utterance.onstart = () => {
@@ -115,7 +98,6 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     utterance.onend = () => speakAt(index + 1, session);
     utterance.onerror = (event) => {
       if (session !== playbackSession.current || event.error === 'canceled' || event.error === 'interrupted') return;
-      setError('Your browser could not play this voice. Try another voice or language.');
       setStatus('idle');
     };
 
@@ -124,7 +106,6 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
 
   function play() {
     if (!supported || !speechQueue.length) return;
-    setError('');
 
     if (status === 'paused') {
       window.speechSynthesis.resume();
@@ -144,59 +125,7 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     setStatus('paused');
   }
 
-  function changeRate(value) {
-    stop(false);
-    setRate(Number(value));
-  }
-
-  function changeVoice(value) {
-    stop(false);
-    setSelectedVoice(value);
-  }
-
-  async function changeLanguage(value) {
-    const request = translationRequest.current + 1;
-    translationRequest.current = request;
-    stop();
-    setTargetLanguage(value);
-    setError('');
-    setSelectedVoice('auto');
-    setTranslating(false);
-
-    if (value === ORIGINAL_LANGUAGE) {
-      setNarration(originalNarration);
-      setActiveLanguage(sourceLanguage);
-      return;
-    }
-
-    const cached = translationCache.current.get(value);
-    if (cached) {
-      setNarration(cached.chunks);
-      setActiveLanguage(cached.targetLanguage);
-      return;
-    }
-
-    setTranslating(true);
-    try {
-      const { data } = await api.post(`/courses/lessons/${lesson._id}/narration`, {
-        language: value,
-      });
-      if (request !== translationRequest.current) return;
-      translationCache.current.set(value, data);
-      setNarration(data.chunks);
-      setActiveLanguage(data.targetLanguage);
-    } catch (requestError) {
-      if (request !== translationRequest.current) return;
-      setTargetLanguage(ORIGINAL_LANGUAGE);
-      setNarration(originalNarration);
-      setActiveLanguage(sourceLanguage);
-      setError(requestError.response?.data?.error || 'Could not translate this lesson narration.');
-    } finally {
-      if (request === translationRequest.current) setTranslating(false);
-    }
-  }
-
-  if (!originalNarration.length) return null;
+  if (!narration.length) return null;
 
   if (!supported) {
     return (
@@ -206,21 +135,23 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
     );
   }
 
+  const noVoice = voices.length > 0 && !languageVoices.length;
+
   return (
     <section className="surface-card relative mb-8 overflow-hidden p-5 animate-enter-delay sm:p-6">
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
-      <div className="relative flex flex-wrap items-start justify-between gap-5">
-        <div className="flex gap-3">
+
+      <div className="relative flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
             <AudioLines className={`h-5 w-5 ${status === 'playing' ? 'animate-pulse' : ''}`} />
           </span>
           <div>
-            <p className="eyebrow">Audio lesson</p>
-            <h2 className="mt-1 font-display text-lg font-bold text-white">
-              {status === 'playing' ? `Listening in ${activeLanguage}` : 'Listen or translate this lesson'}
+            <h2 className="font-display text-base font-bold text-white">
+              {status === 'playing' ? `Playing in ${language}` : `Listen in ${language}`}
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Code and videos are skipped for a smoother narration.
+            <p className="mt-0.5 text-xs text-slate-500">
+              {progress}% complete
             </p>
           </div>
         </div>
@@ -232,78 +163,41 @@ export default function LessonAudioPlayer({ lesson, translationEnabled = true })
               Pause
             </button>
           ) : (
-            <button type="button" onClick={play} disabled={translating} className="btn-primary">
-              {translating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            <button type="button" onClick={play} disabled={noVoice} className="btn-primary">
+              <Play className="h-4 w-4" />
               {status === 'paused' ? 'Resume' : status === 'complete' ? 'Play again' : 'Listen'}
             </button>
           )}
-          <button type="button" onClick={() => stop()} className="icon-button" title="Stop audio">
-            <Square className="h-3.5 w-3.5" />
-          </button>
+          {status !== 'idle' && (
+            <button type="button" onClick={() => stop()} className="icon-button" title="Stop audio">
+              <Square className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {status !== 'idle' && status !== 'playing' && (
+            <button type="button" onClick={() => stop()} className="icon-button" title="Reset">
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="relative mt-5 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
         <div
           className="h-full rounded-full bg-gradient-to-r from-violet-500 via-brand-400 to-cyan-400 transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="relative mt-5 grid gap-3 sm:grid-cols-3">
-        <label className="text-xs font-medium text-slate-400">
-          <span className="mb-2 flex items-center gap-1.5"><Languages className="h-3.5 w-3.5 text-brand-300" /> Narration language</span>
-          <select
-            value={targetLanguage}
-            onChange={(event) => changeLanguage(event.target.value)}
-            disabled={translating}
-            className="input-field"
-          >
-            <option value={ORIGINAL_LANGUAGE}>Original ({sourceLanguage})</option>
-            {translationEnabled && SPEECH_LANGUAGES
-              .filter(({ label }) => label.toLocaleLowerCase() !== sourceLanguage.toLocaleLowerCase())
-              .map(({ label }) => <option key={label} value={label}>{label}</option>)}
-          </select>
-        </label>
-
-        <label className="text-xs font-medium text-slate-400">
-          <span className="mb-2 flex items-center gap-1.5"><Volume2 className="h-3.5 w-3.5 text-cyan-300" /> Voice</span>
-          <select value={selectedVoice} onChange={(event) => changeVoice(event.target.value)} className="input-field">
-            <option value="auto">Best available voice</option>
-            {languageVoices.map((voice) => (
-              <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="text-xs font-medium text-slate-400">
-          <span className="mb-2 flex items-center gap-1.5"><Gauge className="h-3.5 w-3.5 text-emerald-300" /> Playback speed</span>
-          <select value={rate} onChange={(event) => changeRate(event.target.value)} className="input-field">
-            {PLAYBACK_RATES.map((value) => <option key={value} value={value}>{value}x</option>)}
-          </select>
-        </label>
-      </div>
-
-      <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-        <span>
-          {translating
-            ? `Translating narration to ${targetLanguage}...`
-            : `${progress}% complete - ${activeLanguage}`}
-        </span>
-        {status !== 'idle' && (
-          <button type="button" onClick={() => stop()} className="flex items-center gap-1.5 text-slate-500 transition hover:text-white">
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset audio
-          </button>
-        )}
-      </div>
-
-      {!languageVoices.length && (
-        <p className="relative mt-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.06] px-3 py-2 text-xs text-amber-200/80">
-          No dedicated {activeLanguage} voice is installed. Your browser will use its closest available voice.
-        </p>
+      {noVoice && (
+        <div className="relative mt-4 rounded-xl border border-amber-400/15 bg-amber-400/[0.06] px-4 py-3">
+          <p className="text-sm font-medium text-amber-200">
+            No {language} voice installed
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-amber-200/70">
+            Your device doesn't have a {language} voice pack. To listen to this lesson, please install a {language} text-to-speech voice in your device's language settings, then reload this page.
+          </p>
+        </div>
       )}
-      {error && <p className="relative mt-3 text-sm text-rose-300">{error}</p>}
     </section>
   );
 }

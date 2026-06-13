@@ -267,9 +267,6 @@ export default function LessonViewerPage() {
             </div>
           </header>
 
-          {hasContent && !generating && (
-            <LessonAudioPlayer key={`audio-${lessonId}`} lesson={lesson} />
-          )}
 
           {course && (
             <div className="mb-8 animate-enter-delay">
@@ -305,6 +302,10 @@ export default function LessonViewerPage() {
               onLessonUpdate={updateCurrentLesson}
               onToggleChat={() => setShowChat((visible) => !visible)}
             />
+          )}
+
+          {hasContent && !generating && (
+            <LessonAudioPlayer key={`audio-${lessonId}`} lesson={lesson} />
           )}
 
           {hasContent && !generating && course && (

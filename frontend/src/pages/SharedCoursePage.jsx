@@ -105,7 +105,6 @@ export default function SharedCoursePage() {
               <LessonAudioPlayer
                 key={`audio-${selectedLesson._id}`}
                 lesson={selectedLesson}
-                translationEnabled={false}
               />
               <LessonRenderer content={selectedLesson.content} />
             </>
