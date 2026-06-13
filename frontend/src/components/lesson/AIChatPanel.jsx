@@ -107,10 +107,10 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
   if (!isOpen) return null;
 
   return (
-    <aside className="fixed inset-y-16 right-0 z-40 flex w-full max-w-lg flex-col border-l border-slate-800 bg-slate-900 shadow-2xl shadow-black/30">
-      <header className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 p-4">
+    <aside className="fixed bottom-0 right-0 top-[4.5rem] z-40 flex w-full max-w-lg flex-col border-l border-white/[0.08] bg-[#090c1c]/90 shadow-2xl shadow-black/40 animate-scale-in backdrop-blur-2xl">
+      <header className="flex items-center justify-between gap-3 border-b border-white/[0.07] bg-white/[0.02] p-4">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-300">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/20 to-cyan-400/10 text-indigo-200">
             <Bot className="h-5 w-5" />
           </span>
           <div className="min-w-0">
@@ -181,8 +181,8 @@ export default function AIChatPanel({ lessonId, lessonTitle, isOpen, onClose }) 
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-slate-800 bg-slate-900 p-4">
-        <div className="flex items-end gap-2 rounded-xl border border-slate-700 bg-slate-950 p-2 focus-within:border-indigo-500">
+      <div className="border-t border-white/[0.07] bg-white/[0.02] p-4">
+        <div className="flex items-end gap-2 rounded-2xl border border-white/[0.09] bg-black/20 p-2 transition focus-within:border-indigo-400/50 focus-within:shadow-[0_0_0_4px_rgba(99,102,241,0.08)]">
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}

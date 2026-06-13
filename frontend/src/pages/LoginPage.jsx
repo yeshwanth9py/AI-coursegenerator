@@ -46,7 +46,7 @@ export default function LoginPage() {
       <button
         type="button"
         onClick={loginWithAuth0}
-        className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+        className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/80 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-slate-900"
       >
         <GoogleIcon />
         Continue with Google
@@ -107,7 +107,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition hover:from-brand-500 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-primary w-full py-3"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {loading ? 'Signing in...' : 'Sign in'}

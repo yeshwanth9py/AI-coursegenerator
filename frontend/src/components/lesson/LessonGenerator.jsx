@@ -1,4 +1,4 @@
-import { Loader2, Sparkles } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Sparkles } from 'lucide-react';
 
 export default function LessonGenerator({
   hasContent,
@@ -15,11 +15,35 @@ export default function LessonGenerator({
   const isStreaming = isGenerating && streamedCount > 0;
 
   return (
-    <section className="mb-8 rounded-xl border border-slate-800 bg-slate-900 p-6">
-      <h2 className="font-semibold text-white">
-        {hasContent ? 'Regenerate lesson' : 'Generate lesson'}
-      </h2>
-      <p className="mt-1 text-sm text-slate-500">
+    <section className="surface-card relative mb-10 overflow-hidden p-5 animate-enter-delay sm:p-6">
+      <div className="pointer-events-none absolute -right-14 -top-16 h-40 w-40 rounded-full bg-brand-500/15 blur-3xl" />
+      <div className="relative flex flex-wrap items-start justify-between gap-5">
+        <div className="flex gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-brand-400/20 bg-brand-500/10 text-brand-200">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="eyebrow">AI lesson studio</p>
+            <h2 className="mt-1 font-display text-lg font-bold text-white">
+              {hasContent ? 'Shape this lesson your way' : 'Bring this lesson to life'}
+            </h2>
+          </div>
+        </div>
+        {!isPickerOpen && (
+          <button
+            type="button"
+            onClick={() => onPickerChange(true)}
+            disabled={isGenerating}
+            className="btn-primary"
+          >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isGenerating
+              ? isStreaming ? 'Streaming...' : 'Generating...'
+              : hasContent ? 'Regenerate' : 'Generate lesson'}
+          </button>
+        )}
+      </div>
+      <p className="relative mt-4 text-sm text-slate-500">
         {isStreaming
           ? `Streaming content... ${streamedCount} block${streamedCount !== 1 ? 's' : ''} received`
           : isGenerating
@@ -33,26 +57,10 @@ export default function LessonGenerator({
         </div>
       )}
 
-      {!isPickerOpen ? (
-        <button
-          type="button"
-          onClick={() => onPickerChange(true)}
-          disabled={isGenerating}
-          className="btn-primary mt-5"
-        >
-          {isGenerating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles className="h-4 w-4" />
-          )}
-          {isGenerating
-            ? isStreaming ? 'Streaming...' : 'Generating...'
-            : hasContent ? 'Regenerate' : 'Generate'}
-        </button>
-      ) : (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      {isPickerOpen && (
+        <div className="relative mt-5 grid gap-4 rounded-2xl border border-white/[0.07] bg-black/10 p-4 sm:grid-cols-2">
           <label className="text-sm text-slate-300">
-            Depth
+            <span className="flex items-center gap-2 font-medium"><BookOpen className="h-4 w-4 text-brand-300" /> Learning depth</span>
             <select
               value={selectedDepth}
               onChange={(event) => onDepthChange(event.target.value)}
@@ -65,7 +73,7 @@ export default function LessonGenerator({
           </label>
 
           <label className="text-sm text-slate-300">
-            Language
+            <span className="flex items-center gap-2 font-medium"><Languages className="h-4 w-4 text-cyan-300" /> Language</span>
             <input
               type="text"
               value={language}

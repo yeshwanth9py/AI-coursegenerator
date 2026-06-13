@@ -26,9 +26,9 @@ export default function AuthLayout({
   eyebrow,
 }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(460px,0.92fr)]">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-44 right-0 h-[30rem] w-[30rem] rounded-full bg-cyan-500/10 blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden text-slate-200 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(460px,0.92fr)]">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-600/20 blur-3xl [animation:glowPulse_7s_ease-in-out_infinite]" />
+      <div className="pointer-events-none absolute -bottom-44 right-0 h-[30rem] w-[30rem] rounded-full bg-cyan-500/10 blur-3xl [animation:glowPulse_9s_1s_ease-in-out_infinite]" />
 
       <section className="relative hidden min-h-screen overflow-hidden border-r border-white/5 p-12 lg:flex lg:flex-col xl:p-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.18),transparent_32%),radial-gradient(circle_at_80%_70%,rgba(34,211,238,0.10),transparent_26%)]" />
@@ -41,7 +41,7 @@ export default function AuthLayout({
           <span className="text-lg font-semibold tracking-tight">CourseAI</span>
         </Link>
 
-        <div className="relative z-10 my-auto max-w-2xl py-12">
+        <div className="relative z-10 my-auto max-w-2xl py-12 animate-enter">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-300">
             <Sparkles className="h-3.5 w-3.5" />
             Learn anything, your way
@@ -53,7 +53,7 @@ export default function AuthLayout({
             Build a tailored learning path in seconds, then learn through focused lessons, practice, and projects.
           </p>
 
-          <div className="mt-10 max-w-lg rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="mt-10 max-w-lg rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl [animation:float_7s_ease-in-out_infinite]">
             <div className="flex items-start justify-between gap-4 border-b border-white/5 pb-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-300">Your learning path</p>
@@ -90,7 +90,7 @@ export default function AuthLayout({
       </section>
 
       <section className="relative flex min-h-screen items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md animate-enter-delay">
           <Link to="/" className="mb-10 flex w-fit items-center gap-2.5 text-white lg:hidden">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 shadow-lg shadow-brand-500/20">
               <BookOpen className="h-4 w-4" />
@@ -98,7 +98,7 @@ export default function AuthLayout({
             <span className="font-semibold tracking-tight">CourseAI</span>
           </Link>
 
-          <div className="rounded-3xl border border-white/10 bg-slate-900/75 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
+          <div className="rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(18,23,42,0.9),rgba(8,11,25,0.82))] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
             <div className="mb-7">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">{eyebrow}</p>
               <h1 className="text-3xl font-semibold tracking-tight text-white">{title}</h1>

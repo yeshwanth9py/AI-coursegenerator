@@ -12,6 +12,7 @@ const {
 const { saveGeneratedCourse } = require("../services/coursePersistence");
 const { getOwnedLesson } = require("../services/lessonAccessService");
 const { findLessonVideos } = require("../services/youtubeService");
+const { createLessonNarration } = require("../services/lessonNarration");
 const VALID_DEPTHS = new Set(["brief", "standard", "deep"]);
 
 async function generateCourseContent(req, res) {
@@ -137,6 +138,14 @@ async function chatAboutLesson(req, res) {
   return res.json({ reply });
 }
 
+async function getLessonNarration(req, res) {
+  const { lesson } = await getOwnedLesson(req.params.lessonId, req.user._id);
+  const language = String(req.body?.language || "").trim().slice(0, 80);
+  const narration = await createLessonNarration(lesson, language);
+
+  return res.json(narration);
+}
+
 module.exports = {
   addSuggestedVideos,
   chatAboutLesson,
@@ -146,4 +155,5 @@ module.exports = {
   generateFlashcards,
   generatePracticeLab,
   generateQuiz,
+  getLessonNarration,
 };

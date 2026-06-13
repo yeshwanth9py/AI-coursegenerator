@@ -12,15 +12,16 @@ export default function CertificateProgress({
   const lessonWord = progress.remainingLessons === 1 ? 'lesson' : 'lessons';
 
   return (
-    <section className={`rounded-xl border p-5 ${
+    <section className={`relative overflow-hidden rounded-2xl border p-5 shadow-xl shadow-black/10 ${
       unlocked
-        ? 'border-emerald-500/40 bg-emerald-500/10'
-        : 'border-brand-500/30 bg-brand-500/5'
+        ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 to-slate-950/60'
+        : 'border-brand-500/25 bg-gradient-to-br from-brand-500/10 to-slate-950/60'
     }`}
     >
+      <div className={`pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full blur-3xl ${unlocked ? 'bg-emerald-400/15' : 'bg-brand-500/15'}`} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex gap-3">
-          <div className={`rounded-lg p-2 ${unlocked ? 'bg-emerald-500/20' : 'bg-brand-500/15'}`}>
+          <div className={`relative rounded-xl border p-2.5 ${unlocked ? 'border-emerald-400/20 bg-emerald-500/15' : 'border-brand-400/20 bg-brand-500/15'}`}>
             {unlocked
               ? <Award className="h-5 w-5 text-emerald-400" />
               : <Lock className="h-5 w-5 text-brand-400" />}
@@ -58,9 +59,9 @@ export default function CertificateProgress({
         <span>{progress.completedLessons} of {progress.totalLessons} lessons complete</span>
         <span>{progress.percentage}%</span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.07]">
         <div
-          className={`h-full ${unlocked ? 'bg-emerald-500' : 'bg-brand-500'}`}
+          className={`h-full rounded-full transition-all duration-700 ${unlocked ? 'bg-gradient-to-r from-emerald-500 to-cyan-400' : 'bg-gradient-to-r from-violet-500 via-brand-400 to-cyan-400'}`}
           style={{ width: `${progress.percentage}%` }}
         />
       </div>

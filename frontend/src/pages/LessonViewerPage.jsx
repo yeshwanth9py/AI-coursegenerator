@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  BookOpen,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CertificateProgress from '../components/CertificateProgress';
@@ -11,6 +13,7 @@ import ReadingProgress from '../components/ReadingProgress';
 import AIChatPanel from '../components/lesson/AIChatPanel';
 import LessonGenerator from '../components/lesson/LessonGenerator';
 import LessonCompletion from '../components/lesson/LessonCompletion';
+import LessonAudioPlayer from '../components/lesson/LessonAudioPlayer';
 import LessonRenderer from '../components/lesson/LessonRenderer';
 import LessonSidebar from '../components/lesson/LessonSidebar';
 import StudyTools from '../components/lesson/StudyTools';
@@ -207,7 +210,7 @@ export default function LessonViewerPage() {
   const hasContent = lesson.content?.length > 0;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4.5rem)] overflow-hidden">
       <ReadingProgress containerRef={lessonScrollRef} />
 
       {course && (
@@ -220,8 +223,8 @@ export default function LessonViewerPage() {
       )}
 
       <div ref={lessonScrollRef} className="flex-1 overflow-y-auto">
-        <div data-reading-content className="px-4 lg:px-12 py-8 max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-8 flex-wrap">
+        <div data-reading-content className="mx-auto max-w-5xl px-4 py-8 lg:px-12 lg:py-10">
+          <div className="mb-7 flex flex-wrap items-center gap-2 text-xs text-slate-500 animate-enter">
             <button onClick={() => navigate('/')} className="hover:text-white transition-colors">
               Home
             </button>
@@ -240,18 +243,40 @@ export default function LessonViewerPage() {
             <span className="text-slate-300 truncate max-w-[200px]">{lesson.title}</span>
           </div>
 
+          <header className="relative mb-8 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[radial-gradient(circle_at_90%_0%,rgba(34,211,238,0.10),transparent_30%),linear-gradient(145deg,rgba(20,24,46,0.92),rgba(7,9,22,0.88))] p-6 shadow-2xl shadow-black/15 animate-enter sm:p-8">
+            <div className="soft-grid pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(to_right,black,transparent_82%)]" />
+            <div className="relative">
+              <p className="eyebrow"><BookOpen className="h-3.5 w-3.5" /> Focus mode</p>
+              <h1 className="gradient-text mt-4 max-w-4xl font-display text-3xl font-extrabold leading-tight tracking-[-0.04em] sm:text-4xl">
+                {lesson.title}
+              </h1>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-200">
+                  {lesson.language || 'English'}
+                </span>
+                {lesson.completedAt && (
+                  <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
+                    Lesson complete
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-slate-400">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                  AI-powered lesson
+                </span>
+              </div>
+            </div>
+          </header>
+
+          {hasContent && !generating && (
+            <LessonAudioPlayer key={`audio-${lessonId}`} lesson={lesson} />
+          )}
+
           {course && (
-            <div className="mb-8">
+            <div className="mb-8 animate-enter-delay">
               <CertificateProgress
                 course={course}
                 onViewCertificate={() => navigate(`/course/${courseId}/certificate`)}
               />
-              {!lesson.completedAt && (
-                <p className="mt-3 text-center text-sm text-slate-400">
-                  When you finish reading, use the <strong className="text-white">Complete lesson</strong> button
-                  at the end of this page.
-                </p>
-              )}
             </div>
           )}
 

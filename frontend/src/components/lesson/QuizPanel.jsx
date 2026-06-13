@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Brain, CheckCircle2, Loader2, Trophy } from 'lucide-react';
 import api from '../../utils/api';
 
 export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) {
@@ -13,7 +13,7 @@ export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) 
   const [error, setError] = useState('');
   const panelClass = embedded
     ? ''
-    : 'mt-8 rounded-xl border border-slate-800 bg-slate-900 p-6';
+    : 'surface-card mt-8 p-6';
 
   async function generateQuiz() {
     setLoading(true);
@@ -59,9 +59,9 @@ export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) 
 
   if (loading) {
     return (
-      <div className={`${panelClass} flex items-center gap-3 text-slate-400`}>
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Generating quiz...
+      <div className={`${panelClass} flex min-h-32 items-center justify-center gap-3 text-slate-400`}>
+        <Loader2 className="h-5 w-5 animate-spin text-brand-300" />
+        Designing your quiz...
       </div>
     );
   }
@@ -69,7 +69,8 @@ export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) 
   if (!questions.length) {
     return (
       <div className={panelClass}>
-        <h2 className="font-semibold text-white">Quick quiz</h2>
+        <span className="grid h-11 w-11 place-items-center rounded-xl border border-brand-400/20 bg-brand-500/10 text-brand-200"><Brain className="h-5 w-5" /></span>
+        <h2 className="mt-4 font-display text-xl font-bold text-white">Test your understanding</h2>
         <p className="mt-2 text-sm text-slate-500">{error || 'Generate five questions from this lesson.'}</p>
         {lesson.quizAttempts > 0 && (
           <p className="mt-2 text-xs text-slate-500">
@@ -86,8 +87,9 @@ export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) 
   if (index >= questions.length) {
     return (
       <div className={panelClass}>
-        <h2 className="font-semibold text-white">Quiz complete</h2>
-        <p className="mt-2 text-slate-400">You scored {score} out of {questions.length}.</p>
+        <span className="grid h-12 w-12 place-items-center rounded-xl border border-amber-400/20 bg-amber-500/10 text-amber-300"><Trophy className="h-6 w-6" /></span>
+        <h2 className="mt-4 font-display text-xl font-bold text-white">Quiz complete</h2>
+        <p className="mt-2 text-slate-400">You scored <strong className="text-white">{score} out of {questions.length}</strong>.</p>
         {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
         <button type="button" onClick={generateQuiz} className="btn-secondary mt-4">
           Generate new questions
@@ -100,34 +102,43 @@ export default function QuizPanel({ lesson, onLessonUpdate, embedded = false }) 
 
   return (
     <div className={panelClass}>
-      <p className="text-xs text-slate-500">Question {index + 1} of {questions.length}</p>
-      <h2 className="mt-3 font-medium text-white">{question.question}</h2>
+      <div className="flex items-center justify-between gap-4">
+        <p className="eyebrow">Question {index + 1} of {questions.length}</p>
+        <p className="text-xs font-semibold text-brand-200">Score {score}</p>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all duration-500" style={{ width: `${((index + 1) / questions.length) * 100}%` }} />
+      </div>
+      <h2 className="mt-6 font-display text-lg font-bold leading-relaxed text-white">{question.question}</h2>
 
       <div className="mt-5 space-y-2">
         {question.options.map((option, optionIndex) => {
           const correct = checked && optionIndex === question.correctAnswer;
           const wrong = checked && answer === optionIndex && !correct;
-          let optionClass = 'border-slate-700 text-slate-300';
+          let optionClass = 'border-white/[0.08] bg-white/[0.025] text-slate-300 hover:border-brand-400/25 hover:bg-brand-500/[0.06]';
 
-          if (correct) optionClass = 'border-emerald-500 text-emerald-300';
-          else if (wrong) optionClass = 'border-rose-500 text-rose-300';
-          else if (answer === optionIndex) optionClass = 'border-brand-500 text-white';
+          if (correct) optionClass = 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300';
+          else if (wrong) optionClass = 'border-rose-500/50 bg-rose-500/10 text-rose-300';
+          else if (answer === optionIndex) optionClass = 'border-brand-400/50 bg-brand-500/15 text-white';
 
           return (
             <button
               key={option}
               type="button"
               onClick={() => !checked && setAnswer(optionIndex)}
-              className={`w-full rounded-lg border p-3 text-left text-sm ${optionClass}`}
+              className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition ${optionClass}`}
             >
-              {option}
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-current/20 text-xs font-bold">
+                {correct ? <CheckCircle2 className="h-4 w-4" /> : String.fromCharCode(65 + optionIndex)}
+              </span>
+              <span>{option}</span>
             </button>
           );
         })}
       </div>
 
       {checked && question.explanation && (
-        <p className="mt-4 text-sm text-slate-400">{question.explanation}</p>
+        <p className="mt-5 rounded-xl border border-brand-400/15 bg-brand-500/[0.07] p-4 text-sm leading-6 text-slate-300">{question.explanation}</p>
       )}
 
       <button

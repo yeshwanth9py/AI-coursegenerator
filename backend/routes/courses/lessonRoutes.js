@@ -7,6 +7,7 @@ const {
   generateFlashcards,
   generatePracticeLab,
   generateQuiz,
+  getLessonNarration,
 } = require("../../controllers/courseAiController");
 const {
   saveQuizResult,
@@ -23,6 +24,7 @@ router.post("/:lessonId/quiz-result", saveQuizResult);
 router.post("/:lessonId/enrich", enrichLesson);
 router.post("/:lessonId/enrich-stream", enrichLessonStream);
 router.post("/:lessonId/add-videos", addSuggestedVideos);
+router.post("/:lessonId/narration", getLessonNarration);
 
 // Study tools
 router.post("/:lessonId/generate-quiz", generateQuiz);

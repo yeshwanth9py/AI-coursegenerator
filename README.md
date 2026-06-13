@@ -155,87 +155,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for additional implementation notes.
 | `POST` | `/api/courses/lessons/:id/chat` | Ask the lesson-aware AI tutor |
 | `GET` | `/api/public/courses/:shareId` | Read a privacy-safe shared course |
 
-## Local Development
 
-### Prerequisites
 
-- Node.js 20.19+ or 22.12+
-- MongoDB database
-- Groq API key
-- Auth0 application for social login
-- YouTube Data API key for video suggestions
-
-### 1. Clone The Repository
-
-```bash
-git clone https://github.com/yeshwanth9py/AI-coursegenerator.git
-cd AI-coursegenerator
-```
-
-### 2. Configure Environment Variables
-
-Create local environment files from the included templates:
-
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Backend configuration:
-
-```env
-NODE_ENV=development
-PORT=3000
-FRONTEND_URL=http://localhost:5173
-
-MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/courseai
-JWT_SECRET=replace-with-a-long-random-secret
-GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=openai/gpt-oss-20b
-AUTH0_DOMAIN=your-tenant.auth0.com
-YOUTUBE_API_KEY=your-youtube-data-api-key
-```
-
-Frontend configuration:
-
-```env
-VITE_API_BASE_URL=http://localhost:3000/api
-VITE_AUTH0_DOMAIN=your-tenant.auth0.com
-VITE_AUTH0_CLIENT_ID=your-public-auth0-client-id
-```
-
-Never place database URLs, JWT secrets, or provider secret keys in `VITE_*` variables. Vite includes those variables in the browser bundle.
-
-### 3. Install And Run
-
-Start the API:
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-In a second terminal, start the frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173`.
-
-## Verification
-
-```bash
-cd backend
-npm run lint
-
-cd ../frontend
-npm run lint
-npm run build
-```
 
 ## Design Decisions
 
@@ -246,15 +167,6 @@ npm run build
 - **Separate public projection:** privacy is enforced by the backend response shape instead of relying on the frontend to hide fields.
 - **Final persistence after streaming:** users see incremental progress, while the database stores only the completed lesson as the canonical version.
 
-## Future Improvements
-
-- Add automated controller, service, and streaming parser tests.
-- Support cancellation with `AbortController` when learners leave during generation.
-- Add background jobs and resumable generation for long-running lessons.
-- Add provider-independent AI adapters and usage analytics.
-- Add downloadable PDF generation and certificate verification IDs.
-
----
 
 <div align="center">
 

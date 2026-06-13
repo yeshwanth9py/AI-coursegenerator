@@ -1,7 +1,8 @@
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronRight, Globe2, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
+import LessonAudioPlayer from '../components/lesson/LessonAudioPlayer';
 import LessonRenderer from '../components/lesson/LessonRenderer';
 import api from '../utils/api';
 
@@ -29,24 +30,48 @@ export default function SharedCoursePage() {
   }, [shareId]);
 
   if (loading) return <LoadingSpinner text="Loading shared course..." />;
-  if (!course) return <p className="py-20 text-center text-slate-400">This course is not public.</p>;
+  if (!course) {
+    return (
+      <div className="page-shell max-w-xl py-24 text-center animate-enter">
+        <div className="surface-card p-10">
+          <BookOpen className="mx-auto h-9 w-9 text-brand-300" />
+          <h1 className="mt-5 font-display text-2xl font-bold text-white">Course unavailable</h1>
+          <p className="mt-2 text-sm text-slate-400">This course is private or the shared link is no longer active.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-200">
-      <header className="border-b border-slate-800 px-4 py-5 lg:px-8">
-        <p className="text-sm font-semibold text-white">CourseAI</p>
-        <p className="mt-1 text-xs text-slate-500">Read-only shared course</p>
+    <main className="min-h-screen text-slate-200">
+      <header className="sticky top-0 z-20 border-b border-white/[0.07] bg-[#070916]/80 px-4 py-4 backdrop-blur-2xl lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg shadow-brand-500/20">
+              <BookOpen className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="font-display text-sm font-bold text-white">Course<span className="text-brand-300">AI</span></p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-600">Shared learning path</p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full border border-cyan-400/15 bg-cyan-400/[0.07] px-3 py-1.5 text-xs text-cyan-200">
+            <Globe2 className="h-3.5 w-3.5" />
+            Read only
+          </span>
+        </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[20rem_1fr] lg:px-8">
-        <aside>
-          <h1 className="text-2xl font-semibold text-white">{course.title}</h1>
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[21rem_1fr] lg:px-8 lg:py-10">
+        <aside className="surface-card h-fit p-5 animate-enter lg:sticky lg:top-28">
+          <p className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> Explore course</p>
+          <h1 className="gradient-text mt-4 font-display text-2xl font-extrabold leading-tight">{course.title}</h1>
           {course.description && <p className="mt-3 text-sm leading-relaxed text-slate-400">{course.description}</p>}
 
           <div className="mt-8 space-y-5">
             {course.modules?.map((moduleDoc, moduleIndex) => (
               <section key={moduleDoc._id}>
-                <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">
                   {moduleIndex + 1}. {moduleDoc.title}
                 </h2>
                 <div className="mt-2 space-y-1">
@@ -56,13 +81,13 @@ export default function SharedCoursePage() {
                       type="button"
                       disabled={!lesson.isEnriched}
                       onClick={() => setSelectedLesson(lesson)}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${
+                      className={`group flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition ${
                         lesson._id === selectedLesson?._id
-                          ? 'bg-slate-800 text-white'
-                          : 'text-slate-500 hover:text-slate-300 disabled:opacity-40'
+                          ? 'border-brand-400/25 bg-brand-500/10 text-white'
+                          : 'border-transparent text-slate-500 hover:border-white/[0.06] hover:bg-white/[0.03] hover:text-slate-300 disabled:opacity-40'
                       }`}
                     >
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
                       {lesson.title}
                     </button>
                   ))}
@@ -72,10 +97,16 @@ export default function SharedCoursePage() {
           </div>
         </aside>
 
-        <section className="min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-6 lg:p-10">
+        <section className="surface-card min-w-0 p-6 animate-enter-delay lg:p-10 xl:p-12">
           {selectedLesson ? (
             <>
-              <h2 className="mb-8 text-2xl font-semibold text-white">{selectedLesson.title}</h2>
+              <p className="eyebrow">Current lesson</p>
+              <h2 className="gradient-text mb-10 mt-3 font-display text-3xl font-extrabold">{selectedLesson.title}</h2>
+              <LessonAudioPlayer
+                key={`audio-${selectedLesson._id}`}
+                lesson={selectedLesson}
+                translationEnabled={false}
+              />
               <LessonRenderer content={selectedLesson.content} />
             </>
           ) : (

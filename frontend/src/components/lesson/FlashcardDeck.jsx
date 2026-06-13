@@ -33,8 +33,8 @@ export default function FlashcardDeck({ lessonId, embedded = false }) {
   if (!flashcards.length) {
     return (
       <div className={embedded ? '' : 'rounded-lg border border-slate-800 p-5'}>
-        <h3 className="flex items-center gap-2 font-medium text-white">
-          <Layers3 className="h-4 w-4" />
+        <h3 className="flex items-center gap-2 font-display text-lg font-bold text-white">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-500/10 text-brand-200"><Layers3 className="h-4 w-4" /></span>
           AI flashcards
         </h3>
         <p className="mt-2 text-sm text-slate-500">
@@ -73,12 +73,12 @@ export default function FlashcardDeck({ lessonId, embedded = false }) {
       <button
         type="button"
         onClick={() => setShowAnswer((visible) => !visible)}
-        className="mt-4 min-h-44 w-full rounded-lg border border-slate-700 bg-slate-950 p-6 text-left"
+        className="group mt-4 min-h-52 w-full rounded-2xl border border-brand-400/20 bg-gradient-to-br from-brand-500/10 via-slate-950/70 to-cyan-400/[0.05] p-7 text-left shadow-xl shadow-black/15 transition duration-300 hover:-translate-y-1 hover:border-brand-400/40"
       >
         <span className="text-xs uppercase tracking-wide text-brand-400">
           {showAnswer ? 'Answer' : 'Question'}
         </span>
-        <span className="mt-3 block text-lg text-white">
+        <span className="mt-5 block font-display text-xl font-bold leading-relaxed text-white">
           {showAnswer ? card.back : card.front}
         </span>
         <span className="mt-5 block text-xs text-slate-500">Click to flip</span>

@@ -37,7 +37,7 @@ export default function ShareCourseButton({ course, onUpdate }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={toggleSharing} disabled={saving} className="btn-secondary">
+      <button type="button" onClick={toggleSharing} disabled={saving} className={course.isPublic ? 'btn-secondary' : 'btn-primary'}>
         <ShareIcon className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} />
         {course.isPublic ? 'Make private' : 'Share course'}
       </button>

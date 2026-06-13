@@ -42,7 +42,7 @@ export default function CertificatePage() {
 
   if (!course) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+      <div className="page-shell max-w-2xl py-20 text-center animate-enter">
         <h1 className="text-2xl font-semibold text-white">Course not found</h1>
         <p className="mt-2 text-slate-400">
           We could not load this certificate because the course is missing or unavailable.
@@ -66,14 +66,15 @@ export default function CertificatePage() {
     const remainingLessons = progress.remainingLessons;
 
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-6 shadow-2xl shadow-black/20 lg:p-8">
+      <div className="page-shell max-w-3xl py-12 animate-enter">
+        <div className="surface-card p-6 lg:p-8">
           <button type="button" onClick={() => navigate(`/course/${id}`)} className="btn-secondary">
             <ArrowLeft className="h-4 w-4" />
             Back to course
           </button>
 
-          <div className="mt-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-8">
+          <div className="relative mt-8 overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-8">
+            <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
               <Award className="h-7 w-7" />
             </div>
@@ -115,7 +116,7 @@ export default function CertificatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
+    <div className="page-shell max-w-6xl animate-enter">
       <div className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-6 shadow-2xl shadow-black/20 lg:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>

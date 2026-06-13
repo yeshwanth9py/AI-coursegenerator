@@ -5,11 +5,11 @@ import VideoBlock from '../blocks/VideoBlock';
 
 export default function LessonRenderer({ content = [] }) {
   if (!content.length) {
-    return <p className="text-slate-400">No content available.</p>;
+    return <p className="surface-card p-8 text-center text-slate-500">Generate the lesson to begin learning.</p>;
   }
 
   return (
-    <article id="lesson-content" data-print-content className="space-y-5 leading-relaxed text-slate-300">
+    <article id="lesson-content" data-print-content className="space-y-6 text-[15px] leading-8 text-slate-300 sm:text-base">
       {content.map((block, index) => {
         const animStyle = {
           animation: 'blockFadeIn 0.4s ease-out both',
@@ -22,8 +22,10 @@ export default function LessonRenderer({ content = [] }) {
             <Heading
               key={index}
               style={animStyle}
-              className={`pt-5 font-semibold text-white ${
-                block.level === 3 ? 'text-lg' : 'text-xl'
+              className={`font-display font-bold text-white ${
+                block.level === 3
+                  ? 'pt-5 text-xl text-brand-100'
+                  : 'mt-10 border-t border-white/[0.07] pt-10 text-2xl sm:text-3xl'
               }`}
             >
               {block.text}
@@ -34,7 +36,7 @@ export default function LessonRenderer({ content = [] }) {
         if (block.type === 'list') return <div key={index} style={animStyle}><ListBlock block={block} /></div>;
         if (block.type === 'callout') return <div key={index} style={animStyle}><CalloutBlock block={block} /></div>;
         if (block.type === 'video') return <div key={index} style={animStyle}><VideoBlock block={block} /></div>;
-        if (block.text) return <p key={index} style={animStyle}>{block.text}</p>;
+        if (block.text) return <p key={index} style={animStyle} className="text-slate-300/95">{block.text}</p>;
         return null;
       })}
     </article>

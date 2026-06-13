@@ -33,16 +33,16 @@ function ToolCard({
       disabled={disabled}
       onClick={onClick}
       aria-pressed={active}
-      className={`group flex min-h-36 flex-col rounded-xl border p-4 text-left transition-all ${
+      className={`group relative flex min-h-40 flex-col overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 ${
         active
-          ? 'border-brand-500/70 bg-brand-500/10 shadow-lg shadow-black/20'
-          : 'border-slate-800 bg-slate-950/50 hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-900'
+          ? 'border-brand-400/45 bg-gradient-to-br from-brand-500/20 to-cyan-400/[0.05] shadow-lg shadow-brand-950/20'
+          : 'border-white/[0.075] bg-white/[0.025] hover:-translate-y-1 hover:border-brand-400/25 hover:bg-brand-500/[0.07]'
       } disabled:cursor-not-allowed disabled:opacity-60`}
     >
-      <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+      <span className={`flex h-11 w-11 items-center justify-center rounded-xl border transition ${
         active
-          ? 'bg-brand-500 text-white'
-          : 'bg-slate-800 text-slate-300 group-hover:bg-slate-700 group-hover:text-white'
+          ? 'border-brand-300/30 bg-brand-500 text-white shadow-lg shadow-brand-500/25'
+          : 'border-white/[0.08] bg-white/[0.04] text-slate-300 group-hover:border-brand-400/20 group-hover:bg-brand-500/10 group-hover:text-brand-200'
       }`}
       >
         <Icon className="h-5 w-5" />
@@ -88,10 +88,11 @@ export default function StudyTools({
   }
 
   return (
-    <section className="mt-12 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
-      <div className="border-b border-slate-800 bg-gradient-to-r from-brand-500/10 via-slate-900/20 to-slate-900/20 px-5 py-6 sm:px-7">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand-300">Keep learning</p>
-        <h2 className="mt-2 text-xl font-semibold text-white">Lesson toolkit</h2>
+    <section className="surface-card mt-14 overflow-hidden">
+      <div className="relative overflow-hidden border-b border-white/[0.07] bg-gradient-to-r from-brand-500/10 via-transparent to-cyan-400/[0.04] px-5 py-7 sm:px-7">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-brand-500/15 blur-3xl" />
+        <p className="eyebrow">Keep learning</p>
+        <h2 className="relative mt-2 font-display text-2xl font-bold text-white">Your lesson toolkit</h2>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
           Review the ideas, test your understanding, or get help without leaving this lesson.
         </p>
@@ -148,7 +149,7 @@ export default function StudyTools({
         </div>
 
         {activeTool && (
-          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:p-6">
+          <div className="mt-6 rounded-2xl border border-white/[0.08] bg-black/15 p-4 animate-scale-in sm:p-6">
             {activeTool === 'notes' && (
               <>
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -186,7 +187,7 @@ export default function StudyTools({
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-5">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5">
           <p className="text-xs text-slate-500">Useful lesson actions</p>
           <div className="flex flex-wrap gap-2">
             <button

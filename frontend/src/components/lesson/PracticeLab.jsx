@@ -1,4 +1,4 @@
-import { FlaskConical, Loader2, RefreshCw } from 'lucide-react';
+import { Check, FlaskConical, Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import api from '../../utils/api';
 
@@ -26,7 +26,7 @@ export default function PracticeLab({ lessonId, embedded = false }) {
   if (!lab) {
     return (
       <div className={embedded ? '' : 'rounded-lg border border-slate-800 p-5'}>
-        <h3 className="flex items-center gap-2 font-medium text-white">
+        <h3 className="flex items-center gap-2 font-display text-lg font-bold text-white">
           <FlaskConical className="h-4 w-4" />
           Practice lab
         </h3>
@@ -62,13 +62,13 @@ export default function PracticeLab({ lessonId, embedded = false }) {
       <p className="mt-4 text-sm leading-relaxed text-slate-300">{lab.brief}</p>
 
       <h4 className="mt-6 text-sm font-medium text-white">Steps</h4>
-      <ol className="mt-3 space-y-2 text-sm text-slate-400">
-        {lab.steps.map((step, index) => <li key={step}>{index + 1}. {step}</li>)}
+      <ol className="mt-3 space-y-3 text-sm text-slate-400">
+        {lab.steps.map((step, index) => <li key={step} className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-3"><span className="mr-2 font-semibold text-brand-300">{index + 1}.</span>{step}</li>)}
       </ol>
 
       <h4 className="mt-6 text-sm font-medium text-white">Definition of done</h4>
       <ul className="mt-3 space-y-2 text-sm text-slate-400">
-        {lab.successCriteria.map((item) => <li key={item}>- {item}</li>)}
+        {lab.successCriteria.map((item) => <li key={item} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />{item}</li>)}
       </ul>
 
       <button type="button" onClick={() => setShowHint((visible) => !visible)} className="btn-secondary mt-6">

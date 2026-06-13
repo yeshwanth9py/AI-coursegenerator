@@ -31,19 +31,20 @@ export default function LearningSummary({ courses }) {
   const completedCourses = courses.filter((course) => courseProgress(course).percentage === 100).length;
 
   return (
-    <section className="mb-10 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand-400">Continue learning</p>
+    <section className="mb-12 grid gap-4 lg:grid-cols-[1.45fr_1fr]">
+      <div className="surface-card relative overflow-hidden p-6 sm:p-7">
+        <div className="pointer-events-none absolute -right-24 -top-28 h-64 w-64 rounded-full bg-brand-500/15 blur-3xl" />
+        <p className="eyebrow">Continue learning</p>
         {recentLesson ? (
           <>
-            <h2 className="mt-3 text-xl font-semibold text-white">{recentLesson.title}</h2>
+            <h2 className="relative mt-4 max-w-xl font-display text-2xl font-bold text-white">{recentLesson.title}</h2>
             <p className="mt-1 text-sm text-slate-400">
               {recentLesson.courseTitle} / {recentLesson.moduleTitle}
             </p>
             <button
               type="button"
               onClick={() => navigate(`/course/${recentLesson.courseId}/lesson/${recentLesson._id}`)}
-              className="btn-primary mt-5"
+              className="btn-primary mt-6"
             >
               Resume lesson
               <ArrowRight className="h-4 w-4" />
@@ -56,7 +57,7 @@ export default function LearningSummary({ courses }) {
         )}
 
         {bookmarkedLessons.length > 0 && (
-          <div className="mt-6 border-t border-slate-800 pt-4">
+          <div className="relative mt-6 border-t border-white/[0.07] pt-4">
             <p className="text-xs text-slate-500">Saved for later</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {bookmarkedLessons.slice(0, 3).map((lesson) => (
@@ -64,7 +65,7 @@ export default function LearningSummary({ courses }) {
                   key={lesson._id}
                   type="button"
                   onClick={() => navigate(`/course/${lesson.courseId}/lesson/${lesson._id}`)}
-                  className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:text-white"
+                  className="rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-400 transition hover:border-brand-400/30 hover:bg-brand-500/10 hover:text-white"
                   title={lesson.courseTitle}
                 >
                   {lesson.title}
@@ -76,20 +77,29 @@ export default function LearningSummary({ courses }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <SummaryItem icon={BookOpen} label="Courses" value={courses.length} />
-        <SummaryItem icon={CheckCircle2} label="Lessons done" value={completedLessons} />
-        <SummaryItem icon={Target} label="Overall progress" value={`${completion}%`} />
-        <SummaryItem icon={Trophy} label="Certificates" value={completedCourses} />
+        <SummaryItem icon={BookOpen} label="Courses" value={courses.length} color="violet" />
+        <SummaryItem icon={CheckCircle2} label="Lessons done" value={completedLessons} color="cyan" />
+        <SummaryItem icon={Target} label="Overall progress" value={`${completion}%`} color="blue" />
+        <SummaryItem icon={Trophy} label="Certificates" value={completedCourses} color="amber" />
       </div>
     </section>
   );
 }
 
-function SummaryItem({ icon: Icon, label, value }) {
+const iconColors = {
+  amber: 'bg-amber-400/10 text-amber-300',
+  blue: 'bg-blue-400/10 text-blue-300',
+  cyan: 'bg-cyan-400/10 text-cyan-300',
+  violet: 'bg-violet-400/10 text-violet-300',
+};
+
+function SummaryItem({ icon: Icon, label, value, color }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <Icon className="h-4 w-4 text-brand-400" />
-      <p className="mt-3 text-xl font-semibold text-white">{value}</p>
+    <div className="glass-card rounded-2xl p-4 transition duration-300 hover:-translate-y-1 hover:border-brand-400/25">
+      <span className={`grid h-9 w-9 place-items-center rounded-xl ${iconColors[color]}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <p className="mt-4 font-display text-2xl font-bold text-white">{value}</p>
       <p className="mt-1 text-xs text-slate-500">{label}</p>
     </div>
   );
