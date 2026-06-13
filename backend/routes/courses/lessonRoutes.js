@@ -2,9 +2,8 @@ const { Router } = require("express");
 const {
   addSuggestedVideos,
   chatAboutLesson,
-  enrichLesson,
-  enrichLessonStream,
   generateFlashcards,
+  generateLesson,
   generatePracticeLab,
   generateQuiz,
 } = require("../../controllers/courseAiController");
@@ -19,9 +18,8 @@ const router = Router();
 router.patch("/:lessonId/progress", updateLessonProgress);
 router.post("/:lessonId/quiz-result", saveQuizResult);
 
-// Content enrichment
-router.post("/:lessonId/enrich", enrichLesson);
-router.post("/:lessonId/enrich-stream", enrichLessonStream);
+// Lesson generation
+router.post("/:lessonId/generate", generateLesson);
 router.post("/:lessonId/add-videos", addSuggestedVideos);
 
 // Study tools

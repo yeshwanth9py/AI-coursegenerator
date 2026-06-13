@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BookOpen,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CertificateProgress from '../components/CertificateProgress';
@@ -18,8 +17,7 @@ import LessonRenderer from '../components/lesson/LessonRenderer';
 import LessonSidebar from '../components/lesson/LessonSidebar';
 import StudyTools from '../components/lesson/StudyTools';
 import api from '../utils/api';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+import { generateLessonStream } from '../utils/lessonStream';
 
 export default function LessonViewerPage() {
   const { id: lessonId, courseId } = useParams();
@@ -72,83 +70,28 @@ export default function LessonViewerPage() {
   }, [courseId, lessonId]);
 
   async function generateLesson() {
+    const previousLesson = lesson;
     setGenerating(true);
     setShowDepthPicker(false);
     setStreamedCount(0);
-
-    // Clear existing content so blocks stream in fresh
-    setLesson((prev) => prev ? { ...prev, content: [] } : prev);
+    setLesson((current) => current ? { ...current, content: [] } : current);
 
     try {
-      const response = await fetch(`${API_BASE}/courses/lessons/${lessonId}/enrich-stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ depth: selectedDepth, language: selectedLanguage }),
+      const updatedLesson = await generateLessonStream({
+        depth: selectedDepth,
+        language: selectedLanguage,
+        lessonId,
+        onBlock(block) {
+          setStreamedCount((count) => count + 1);
+          setLesson((current) => current
+            ? { ...current, content: [...(current.content || []), block] }
+            : current);
+        },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to start generation');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let count = 0;
-      let streamComplete = false;
-
-      while (!streamComplete) {
-        const { done, value } = await reader.read();
-        if (done) {
-          streamComplete = true;
-          continue;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        // Keep the last partial line in the buffer
-        buffer = lines.pop() || '';
-
-        let currentEvent = '';
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            currentEvent = line.slice(7).trim();
-          } else if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6);
-            try {
-              const data = JSON.parse(jsonStr);
-
-              if (currentEvent === 'block') {
-                count++;
-                setStreamedCount(count);
-                setLesson((prev) => {
-                  if (!prev) return prev;
-                  return { ...prev, content: [...(prev.content || []), data] };
-                });
-              } else if (currentEvent === 'done') {
-                // Final saved lesson from the server
-                updateCurrentLesson(data);
-              } else if (currentEvent === 'error') {
-                throw new Error(data.error || 'Generation failed');
-              }
-            } catch (parseErr) {
-              if (parseErr.message && !parseErr.message.includes('JSON')) {
-                throw parseErr;
-              }
-              // Ignore JSON parse errors from partial data
-            }
-            currentEvent = '';
-          }
-        }
-      }
-
-      if (count > 0) {
-        toast.success('Lesson content generated');
-      } else {
-        toast.error('No content was generated. Please try again.');
-      }
+      updateCurrentLesson(updatedLesson);
+      toast.success('Lesson content generated');
     } catch (error) {
+      setLesson(previousLesson);
       toast.error(error.message || 'Failed to generate content');
     } finally {
       setGenerating(false);
@@ -243,11 +186,10 @@ export default function LessonViewerPage() {
             <span className="text-slate-300 truncate max-w-[200px]">{lesson.title}</span>
           </div>
 
-          <header className="relative mb-8 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[radial-gradient(circle_at_90%_0%,rgba(34,211,238,0.10),transparent_30%),linear-gradient(145deg,rgba(20,24,46,0.92),rgba(7,9,22,0.88))] p-6 shadow-2xl shadow-black/15 animate-enter sm:p-8">
-            <div className="soft-grid pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(to_right,black,transparent_82%)]" />
-            <div className="relative">
-              <p className="eyebrow"><BookOpen className="h-3.5 w-3.5" /> Focus mode</p>
-              <h1 className="gradient-text mt-4 max-w-4xl font-display text-3xl font-extrabold leading-tight tracking-[-0.04em] sm:text-4xl">
+          <header className="surface-card mb-8 p-6 animate-enter sm:p-8">
+            <div>
+              <p className="eyebrow"><BookOpen className="h-3.5 w-3.5" /> Lesson</p>
+              <h1 className="mt-4 max-w-4xl font-display text-3xl font-bold leading-tight text-white sm:text-4xl">
                 {lesson.title}
               </h1>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -259,10 +201,6 @@ export default function LessonViewerPage() {
                     Lesson complete
                   </span>
                 )}
-                <span className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-slate-400">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                  AI-powered lesson
-                </span>
               </div>
             </div>
           </header>

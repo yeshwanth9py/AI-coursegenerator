@@ -1,6 +1,4 @@
 function errorHandler(error, _req, res, _next) {
-  console.error(error.message);
-
   if (error.name === "CastError") {
     return res.status(400).json({ error: "Invalid identifier" });
   }
@@ -16,6 +14,8 @@ function errorHandler(error, _req, res, _next) {
 
   const statusCode = error.statusCode || 500;
   const message = statusCode === 500 ? "Internal server error" : error.message;
+
+  if (statusCode >= 500) console.error(error);
 
   return res.status(statusCode).json({ error: message });
 }

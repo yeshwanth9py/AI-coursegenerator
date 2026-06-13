@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0",
+    "test": "node --test"
   },
   "type": "commonjs",
   "dependencies": {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 const EXAMPLES = [
   'A beginner React course with small projects',
@@ -20,13 +20,13 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="group rounded-2xl border border-white/10 bg-[#090c1c]/80 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl transition focus-within:border-brand-400/40 focus-within:shadow-[0_24px_90px_rgba(79,70,229,0.18)]">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-white/10 bg-black/15 p-2 transition focus-within:border-brand-400/40">
       <label className="block">
         <span className="sr-only">What course do you want to create?</span>
         <textarea
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder="I want to master product design, from fundamentals to a portfolio project..."
+          placeholder="For example: a practical React course with small projects"
           disabled={isLoading}
           maxLength={2000}
           rows={3}
@@ -49,13 +49,10 @@ export default function PromptForm({ onSubmit, isLoading = false }) {
       </div>
 
       <div className="flex items-center justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-2">
-        <span className="flex items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="h-3.5 w-3.5 text-brand-300" />
-          AI builds the complete course outline
-        </span>
+        <span className="text-xs text-slate-500">Be specific about your goal and experience level.</span>
         <button type="submit" disabled={isLoading || !prompt.trim()} className="btn-primary shrink-0">
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isLoading ? 'Designing course...' : 'Create course'}
+          {isLoading ? 'Creating course...' : 'Create course'}
           {!isLoading && <ArrowRight className="h-4 w-4" />}
         </button>
       </div>

@@ -1,16 +1,8 @@
 const { generateJson } = require("./groqService");
-
-function lessonText(lesson) {
-  return (lesson.content || [])
-    .filter((block) => block?.type === "heading" || block?.type === "paragraph")
-    .map((block) => String(block.text || "").trim())
-    .filter(Boolean)
-    .join("\n")
-    .slice(0, 5000);
-}
+const { lessonText } = require("./lessonContent");
 
 function requireLessonText(lesson) {
-  const text = lessonText(lesson);
+  const text = lessonText(lesson, 5000);
 
   if (!text) {
     const error = new Error("Generate the lesson before creating study material.");

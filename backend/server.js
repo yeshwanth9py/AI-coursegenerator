@@ -1,33 +1,17 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+const app = require("./app");
 const connectDB = require("./config/db");
-const { errorHandler } = require("./middlewares/handleErrors");
-const apiRoutes = require("./routes");
-
-const app = express();
-
-app.use(express.json());
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}));
-
-app.use("/api", apiRoutes);
-
-app.get("/", (req, res) => {
-  res.json({ message: "CourseAI API is running" });
-});
-
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-connectDB().then(() => {
+
+async function startServer() {
+  await connectDB();
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
+}
+
+startServer().catch((error) => {
+  console.error("Could not start server:", error.message);
+  process.exitCode = 1;
 });

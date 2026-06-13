@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Bookmark, CheckCircle2, Circle, Layers3, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, CheckCircle2, Circle, Layers3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CertificateProgress from '../components/CertificateProgress';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -43,12 +43,10 @@ export default function CourseOverviewPage() {
         Back to library
       </button>
 
-      <header className="surface-card relative mb-8 overflow-hidden p-6 animate-enter sm:p-8 lg:p-10">
-        <div className="soft-grid pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(90deg,black,transparent_80%)]" />
-        <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full bg-brand-500/15 blur-[80px]" />
-        <div className="relative">
-          <p className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> Personalized learning path</p>
-          <h1 className="gradient-text mt-5 max-w-4xl font-display text-4xl font-extrabold leading-tight tracking-[-0.04em] lg:text-5xl">{course.title}</h1>
+      <header className="surface-card mb-8 p-6 animate-enter sm:p-8 lg:p-10">
+        <div>
+          <p className="eyebrow">Course overview</p>
+          <h1 className="mt-4 max-w-4xl font-display text-4xl font-bold leading-tight text-white lg:text-5xl">{course.title}</h1>
           {course.description && <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">{course.description}</p>}
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <ShareCourseButton course={course} onUpdate={setCourse} />
@@ -76,7 +74,7 @@ export default function CourseOverviewPage() {
       <div className="space-y-6 animate-enter-delay">
         <div>
           <p className="eyebrow">Course curriculum</p>
-          <h2 className="mt-2 font-display text-2xl font-bold text-white">Your path, step by step</h2>
+          <h2 className="mt-2 font-display text-2xl font-bold text-white">Modules and lessons</h2>
         </div>
         {course.modules?.map((moduleDoc, moduleIndex) => (
           <section key={moduleDoc._id} className="surface-card overflow-hidden">

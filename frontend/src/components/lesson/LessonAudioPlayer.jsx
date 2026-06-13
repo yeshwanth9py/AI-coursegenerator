@@ -2,7 +2,6 @@ import {
   AudioLines,
   Pause,
   Play,
-  RotateCcw,
   Square,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -173,11 +172,6 @@ export default function LessonAudioPlayer({ lesson }) {
               <Square className="h-3.5 w-3.5" />
             </button>
           )}
-          {status !== 'idle' && status !== 'playing' && (
-            <button type="button" onClick={() => stop()} className="icon-button" title="Reset">
-              <RotateCcw className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -194,7 +188,7 @@ export default function LessonAudioPlayer({ lesson }) {
             No {language} voice installed
           </p>
           <p className="mt-1 text-xs leading-relaxed text-amber-200/70">
-            Your device doesn't have a {language} voice pack. To listen to this lesson, please install a {language} text-to-speech voice in your device's language settings, then reload this page.
+            Your device does not have a {language} voice pack. Install a {language} text-to-speech voice in your device settings, then reload this page.
           </p>
         </div>
       )}

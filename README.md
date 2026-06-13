@@ -53,7 +53,7 @@ sequenceDiagram
     participant M as MongoDB
 
     U->>R: Generate lesson
-    R->>E: POST /lessons/:id/enrich-stream
+    R->>E: POST /lessons/:id/generate
     E->>G: Start streamed completion
     loop As each JSON block completes
         G-->>E: Text chunk
@@ -72,9 +72,12 @@ This gives the responsiveness of token streaming while keeping the frontend rend
 Key implementation files:
 
 - [`backend/services/groqService.js`](backend/services/groqService.js) handles provider-specific streaming and errors.
-- [`backend/services/lessonGeneration.js`](backend/services/lessonGeneration.js) incrementally parses and validates structured blocks.
+- [`backend/services/lessonGeneration.js`](backend/services/lessonGeneration.js) coordinates lesson prompts and streamed generation.
+- [`backend/services/contentBlockStreamParser.js`](backend/services/contentBlockStreamParser.js) isolates the incremental JSON parser.
+- [`backend/services/lessonContent.js`](backend/services/lessonContent.js) normalizes and validates generated blocks.
 - [`backend/controllers/courseAiController.js`](backend/controllers/courseAiController.js) sends `block`, `done`, and `error` events.
-- [`frontend/src/pages/LessonViewerPage.jsx`](frontend/src/pages/LessonViewerPage.jsx) reads and decodes the response stream.
+- [`frontend/src/utils/lessonStream.js`](frontend/src/utils/lessonStream.js) reads and decodes the response stream.
+- [`frontend/src/pages/LessonViewerPage.jsx`](frontend/src/pages/LessonViewerPage.jsx) owns lesson-page state.
 - [`frontend/src/components/lesson/LessonRenderer.jsx`](frontend/src/components/lesson/LessonRenderer.jsx) renders each semantic block.
 
 ## Architecture
@@ -105,6 +108,8 @@ AI-coursegenerator/
 |   |-- src/hooks/            Authentication state
 |   `-- src/utils/            API client and progress calculations
 |-- backend/
+|   |-- app.js                Express application setup
+|   |-- server.js             Database connection and process startup
 |   |-- controllers/          Request validation and responses
 |   |-- middlewares/          Sessions, Auth0 verification, errors
 |   |-- models/               Mongoose data models
@@ -147,7 +152,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for additional implementation notes.
 | `POST` | `/api/auth/auth0-sync` | Verify Auth0 identity and start an app session |
 | `POST` | `/api/courses/generate` | Generate and persist a course outline |
 | `GET` | `/api/courses/mine` | Load the authenticated learner's courses |
-| `POST` | `/api/courses/lessons/:id/enrich-stream` | Stream a generated lesson |
+| `POST` | `/api/courses/lessons/:id/generate` | Stream a generated lesson |
 | `PATCH` | `/api/courses/lessons/:id/progress` | Save notes, bookmarks, activity, or completion |
 | `POST` | `/api/courses/lessons/:id/generate-quiz` | Generate a lesson quiz |
 | `POST` | `/api/courses/lessons/:id/flashcards` | Generate a flashcard deck |
@@ -155,7 +160,32 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for additional implementation notes.
 | `POST` | `/api/courses/lessons/:id/chat` | Ask the lesson-aware AI tutor |
 | `GET` | `/api/public/courses/:shareId` | Read a privacy-safe shared course |
 
+## Local Development
 
+Prerequisites: Node.js 20+, MongoDB, a Groq API key, and optional Auth0 and YouTube credentials.
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+In a second terminal:
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Run the project checks before committing:
+
+```bash
+cd backend && npm test && npm run lint
+cd frontend && npm run lint && npm run build
+```
 
 
 ## Design Decisions
@@ -166,10 +196,3 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for additional implementation notes.
 - **Generate study tools on demand:** flashcards and labs do not inflate lesson documents when learners never request them.
 - **Separate public projection:** privacy is enforced by the backend response shape instead of relying on the frontend to hide fields.
 - **Final persistence after streaming:** users see incremental progress, while the database stores only the completed lesson as the canonical version.
-
-
-<div align="center">
-
-Built as a full-stack exploration of structured AI generation, streaming UX, secure persistence, and active learning.
-
-</div>

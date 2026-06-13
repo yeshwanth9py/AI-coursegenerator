@@ -2,10 +2,11 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 const SESSION_COOKIE = "courseai_session";
+const isProduction = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
 };
 

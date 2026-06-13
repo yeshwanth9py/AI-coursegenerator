@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, Sparkles, X } from 'lucide-react';
+import { BookOpen, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CourseCard from '../components/CourseCard';
 import LearningSummary from '../components/LearningSummary';
@@ -58,19 +58,17 @@ export default function HomePage() {
 
   return (
     <div className="page-shell">
-      <section className="relative mb-10 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[radial-gradient(circle_at_80%_10%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_10%_90%,rgba(124,58,237,0.20),transparent_35%),linear-gradient(145deg,rgba(20,24,46,0.94),rgba(7,9,22,0.9))] px-5 py-10 shadow-2xl shadow-black/20 sm:px-8 lg:px-12 lg:py-14">
-        <div className="soft-grid pointer-events-none absolute inset-0 opacity-30 [mask-image:linear-gradient(to_right,black,transparent_75%)]" />
-        <div className="pointer-events-none absolute -right-10 -top-20 h-64 w-64 rounded-full border border-cyan-300/10 bg-cyan-400/[0.04] shadow-[0_0_80px_rgba(34,211,238,0.12)]" />
-        <div className="relative max-w-3xl animate-enter">
-          <p className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> Built around your curiosity</p>
-          <h1 className="gradient-text mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[1.05] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-            What will you master next?
+      <section className="surface-card mb-10 px-5 py-9 sm:px-8 lg:px-10 lg:py-11">
+        <div className="max-w-3xl animate-enter">
+          <p className="eyebrow">Create a course</p>
+          <h1 className="mt-4 max-w-2xl font-display text-4xl font-bold leading-tight text-white sm:text-5xl">
+            What do you want to learn?
           </h1>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-            Describe a goal, topic, or skill. CourseAI turns it into a focused learning journey with lessons, practice, quizzes, and an AI tutor.
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+            Describe a topic or goal. CourseAI will create a structured outline that you can work through lesson by lesson.
           </p>
         </div>
-        <div className="relative mt-8 max-w-4xl animate-enter-delay">
+        <div className="mt-7 max-w-4xl animate-enter-delay">
           <PromptForm onSubmit={generateCourse} isLoading={generating} />
         </div>
       </section>
@@ -85,7 +83,7 @@ export default function HomePage() {
               <BookOpen className="h-5 w-5 text-brand-300" />
               {search ? 'Search results' : 'My courses'}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">{visibleCourses.length} learning journeys</p>
+            <p className="mt-1 text-sm text-slate-500">{visibleCourses.length} courses</p>
           </div>
           {search && (
             <button type="button" onClick={() => setSearchParams({})} className="btn-secondary">
@@ -99,14 +97,14 @@ export default function HomePage() {
           <div className="py-16"><LoadingSpinner text="Loading courses..." /></div>
         ) : visibleCourses.length ? (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {visibleCourses.map((course, index) => (
-              <CourseCard key={course._id} course={course} onDelete={deleteCourse} index={index} />
+            {visibleCourses.map((course) => (
+              <CourseCard key={course._id} course={course} onDelete={deleteCourse} />
             ))}
           </div>
         ) : (
           <div className="surface-card py-16 text-center text-slate-500">
             <BookOpen className="mx-auto h-8 w-8 text-brand-300" />
-            <p className="mt-4">{search ? 'No courses match this search.' : 'Your first learning journey starts above.'}</p>
+            <p className="mt-4">{search ? 'No courses match this search.' : 'Create your first course above.'}</p>
           </div>
         )}
       </section>

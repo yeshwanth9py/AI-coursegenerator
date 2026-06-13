@@ -23,9 +23,9 @@ export default function LessonGenerator({
             <Sparkles className="h-5 w-5" />
           </span>
           <div>
-            <p className="eyebrow">AI lesson studio</p>
+            <p className="eyebrow">Lesson generation</p>
             <h2 className="mt-1 font-display text-lg font-bold text-white">
-              {hasContent ? 'Shape this lesson your way' : 'Bring this lesson to life'}
+              {hasContent ? 'Regenerate lesson content' : 'Generate lesson content'}
             </h2>
           </div>
         </div>

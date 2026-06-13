@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, Globe2, Sparkles } from 'lucide-react';
+import { BookOpen, ChevronRight, Globe2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -64,8 +64,8 @@ export default function SharedCoursePage() {
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[21rem_1fr] lg:px-8 lg:py-10">
         <aside className="surface-card h-fit p-5 animate-enter lg:sticky lg:top-28">
-          <p className="eyebrow"><Sparkles className="h-3.5 w-3.5" /> Explore course</p>
-          <h1 className="gradient-text mt-4 font-display text-2xl font-extrabold leading-tight">{course.title}</h1>
+          <p className="eyebrow">Shared course</p>
+          <h1 className="mt-4 font-display text-2xl font-bold leading-tight text-white">{course.title}</h1>
           {course.description && <p className="mt-3 text-sm leading-relaxed text-slate-400">{course.description}</p>}
 
           <div className="mt-8 space-y-5">
@@ -101,7 +101,7 @@ export default function SharedCoursePage() {
           {selectedLesson ? (
             <>
               <p className="eyebrow">Current lesson</p>
-              <h2 className="gradient-text mb-10 mt-3 font-display text-3xl font-extrabold">{selectedLesson.title}</h2>
+              <h2 className="mb-10 mt-3 font-display text-3xl font-bold text-white">{selectedLesson.title}</h2>
               <LessonAudioPlayer
                 key={`audio-${selectedLesson._id}`}
                 lesson={selectedLesson}

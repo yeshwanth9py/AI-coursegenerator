@@ -33,8 +33,8 @@ export default function SignupPage() {
   return (
     <AuthLayout
       eyebrow="Start learning"
-      title="Start learning your way"
-      description="Create personalized courses for any topic, skill, or goal you care about."
+      title="Create your account"
+      description="Generate courses, save progress, and use the lesson study tools."
       footer={(
         <>
           Already have an account?{' '}

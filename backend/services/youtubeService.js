@@ -2,8 +2,8 @@ const SEARCH_URL = "https://www.googleapis.com/youtube/v3/search";
 
 async function findLessonVideos({ lesson, moduleDoc }) {
   if (!process.env.YOUTUBE_API_KEY) {
-    const error = new Error("server error");
-    error.statusCode = 500;
+    const error = new Error("YouTube suggestions are not configured.");
+    error.statusCode = 503;
     throw error;
   }
 
