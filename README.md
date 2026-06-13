@@ -1,6 +1,6 @@
 <div align="center">
 
-# CourseAI
+# CourseAI (LIVE DEMO EXPLANATION:- https://youtu.be/PB9uZic8KMg)
 
 ### Turn a learning goal into a complete, interactive course.
 
