@@ -1,36 +1,35 @@
 import {
   ArrowRight,
-  Binary,
+  BookOpen,
   BrainCircuit,
   Check,
   Code2,
-  Database,
-  Network,
+  Languages,
+  LineChart,
+  Microscope,
+  Palette,
   Sparkles,
-  Terminal,
+  WandSparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const DSA_PATH = [
-  { label: 'Arrays & Hashing', detail: 'Completed', complete: true },
-  { label: 'Binary Search', detail: 'Learning now', active: true },
-  { label: 'Graphs & Dynamic Programming', detail: 'Up next' },
-];
-
-const CODE_LINES = [
-  { number: 1, content: 'def binary_search(nums, target):', color: 'text-violet-200' },
-  { number: 2, content: '    left, right = 0, len(nums) - 1', color: 'text-slate-300' },
-  { number: 3, content: '    while left <= right:', color: 'text-cyan-200' },
-  { number: 4, content: '        mid = (left + right) // 2', color: 'text-slate-300' },
-  { number: 5, content: '        if nums[mid] == target:', color: 'text-emerald-200' },
-  { number: 6, content: '            return mid', color: 'text-amber-200' },
+const LEARNING_PATH = [
+  { label: 'Understand the foundations', detail: 'Concepts + examples', complete: true },
+  { label: 'Practice with guidance', detail: 'Interactive exercises', active: true },
+  { label: 'Build something real', detail: 'Personalized project' },
 ];
 
 const TOPICS = [
-  { icon: Binary, label: 'DSA', position: 'left-[7%] top-[18%]', delay: '0s' },
-  { icon: Database, label: 'DBMS', position: 'right-[7%] top-[13%]', delay: '1.1s' },
-  { icon: Network, label: 'Networks', position: 'right-[4%] bottom-[18%]', delay: '2.2s' },
-  { icon: Code2, label: 'System Design', position: 'left-[5%] bottom-[12%]', delay: '3.3s' },
+  { icon: Code2, label: 'Software Development', position: 'left-[5%] top-[17%]', delay: '0s' },
+  { icon: LineChart, label: 'Business & Finance', position: 'right-[5%] top-[13%]', delay: '1.1s' },
+  { icon: Languages, label: 'Languages', position: 'right-[3%] bottom-[18%]', delay: '2.2s' },
+  { icon: Palette, label: 'Creative Skills', position: 'left-[4%] bottom-[11%]', delay: '3.3s' },
+];
+
+const COURSE_IDEAS = [
+  { icon: Code2, label: 'Build a full-stack app', color: 'text-cyan-200 bg-cyan-400/10 border-cyan-400/15' },
+  { icon: Microscope, label: 'Explore machine learning', color: 'text-violet-200 bg-violet-400/10 border-violet-400/15' },
+  { icon: LineChart, label: 'Understand personal finance', color: 'text-emerald-200 bg-emerald-400/10 border-emerald-400/15' },
 ];
 
 export function GoogleIcon() {
@@ -44,108 +43,126 @@ export function GoogleIcon() {
   );
 }
 
-function DsaWorkspace() {
+function LearningStudio() {
   return (
     <div className="auth-workspace relative mt-9 max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#070a17]/85 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-      <div className="flex items-center gap-3 border-b border-white/[0.07] bg-white/[0.025] px-4 py-3">
-        <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] bg-white/[0.025] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-cyan-400 text-white">
+            <WandSparkles className="h-3.5 w-3.5" />
+          </span>
+          <div>
+            <p className="text-[10px] font-bold text-slate-300">AI Learning Studio</p>
+            <p className="text-[8px] uppercase tracking-[0.16em] text-slate-600">Designing your course</p>
+          </div>
         </div>
-        <div className="mx-auto flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.025] px-3 py-1 text-[10px] text-slate-500">
-          <Terminal className="h-3 w-3 text-brand-300" />
-          binary_search.py
-        </div>
-        <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-          Running
+        <span className="auth-live-badge rounded-full border border-emerald-400/15 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
+          Generating
         </span>
       </div>
 
-      <div className="grid lg:grid-cols-[1.35fr_0.65fr]">
+      <div className="grid lg:grid-cols-[1.12fr_0.88fr]">
         <div className="border-b border-white/[0.07] p-4 lg:border-b-0 lg:border-r">
-          <div className="space-y-1.5 font-mono text-[11px] leading-5 xl:text-xs">
-            {CODE_LINES.map((line, index) => (
-              <div
-                key={line.number}
-                className="auth-code-line flex"
-                style={{ animationDelay: `${0.55 + index * 0.33}s` }}
-              >
-                <span className="mr-4 w-3 select-none text-right text-slate-700">{line.number}</span>
-                <span className={line.color}>{line.content}</span>
-              </div>
-            ))}
-            <div className="flex">
-              <span className="mr-4 w-3 text-right text-slate-700">7</span>
-              <span className="auth-code-cursor text-brand-300"> </span>
+          <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">Learning goal</p>
+          <div className="rounded-xl border border-brand-400/20 bg-brand-500/[0.07] p-3">
+            <div className="flex gap-2">
+              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-300" />
+              <p className="auth-prompt-text font-mono text-[10px] leading-5 text-slate-300">
+                Teach me a practical skill from beginner to confident, with clear lessons and a real project.
+              </p>
             </div>
           </div>
 
-          <div className="mt-5 rounded-xl border border-white/[0.07] bg-black/20 p-3">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">Array traversal</span>
-              <span className="text-[10px] text-cyan-300">target = 23</span>
-            </div>
-            <div className="flex gap-1.5">
-              {[2, 5, 8, 12, 16, 23, 38].map((value, index) => (
-                <span
-                  key={value}
-                  className={`auth-array-cell grid h-8 min-w-8 flex-1 place-items-center rounded-lg border text-[10px] font-bold ${
-                    value === 23
-                      ? 'border-emerald-400/40 bg-emerald-400/15 text-emerald-200'
-                      : 'border-white/[0.08] bg-white/[0.035] text-slate-400'
-                  }`}
-                  style={{ animationDelay: `${index * 0.35}s` }}
-                >
-                  {value}
+          <div className="mt-4 space-y-2">
+            {COURSE_IDEAS.map(({ icon: Icon, label, color }, index) => (
+              <div
+                key={label}
+                className="auth-idea-card flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5"
+                style={{ animationDelay: `${0.7 + index * 0.45}s` }}
+              >
+                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${color}`}>
+                  <Icon className="h-3.5 w-3.5" />
                 </span>
-              ))}
-            </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[10px] font-semibold text-slate-300">{label}</span>
+                  <span className="mt-0.5 block text-[8px] text-slate-600">Personalized path ready</span>
+                </span>
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            {['Lessons', 'Practice', 'AI tutor', 'Certificate'].map((item, index) => (
+              <span
+                key={item}
+                className="auth-feature-chip flex-1 rounded-lg border border-white/[0.06] bg-white/[0.025] px-2 py-1.5 text-center text-[8px] font-semibold text-slate-500"
+                style={{ animationDelay: `${index * 0.35}s` }}
+              >
+                {item}
+              </span>
+            ))}
           </div>
         </div>
 
-        <div className="space-y-4 p-4">
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">Complexity</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <div className="rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] p-2.5">
-                <p className="font-mono text-sm font-bold text-cyan-200">O(log n)</p>
-                <p className="mt-1 text-[9px] text-slate-600">Time</p>
-              </div>
-              <div className="rounded-xl border border-violet-400/15 bg-violet-400/[0.06] p-2.5">
-                <p className="font-mono text-sm font-bold text-violet-200">O(1)</p>
-                <p className="mt-1 text-[9px] text-slate-600">Space</p>
-              </div>
+        <div className="p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-300">Your course</p>
+              <h3 className="mt-1 font-display text-xs font-bold text-white">A path built around you</h3>
+            </div>
+            <div className="relative grid h-11 w-11 place-items-center rounded-full bg-white/[0.035]">
+              <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90">
+                <circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="3" />
+                <circle className="auth-progress-ring" cx="20" cy="20" r="17" fill="none" stroke="url(#authProgress)" strokeWidth="3" strokeLinecap="round" />
+                <defs>
+                  <linearGradient id="authProgress">
+                    <stop stopColor="#818cf8" />
+                    <stop offset="1" stopColor="#22d3ee" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="text-[8px] font-bold text-brand-200">68%</span>
             </div>
           </div>
 
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">Learning path</p>
-            <div className="mt-2 space-y-1.5">
-              {DSA_PATH.map((step, index) => (
-                <div
-                  key={step.label}
-                  className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 ${
-                    step.active
-                      ? 'border-brand-400/25 bg-brand-500/10'
-                      : 'border-transparent bg-white/[0.025]'
-                  }`}
-                >
-                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[9px] font-bold ${
-                    step.complete
-                      ? 'bg-emerald-400/10 text-emerald-300'
-                      : step.active
-                        ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
-                        : 'bg-white/[0.04] text-slate-600'
-                  }`}>
-                    {step.complete ? <Check className="h-3 w-3" /> : index + 1}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[10px] font-semibold text-slate-300">{step.label}</span>
-                    <span className="block text-[8px] text-slate-600">{step.detail}</span>
-                  </span>
-                </div>
-              ))}
+          <div className="mt-4 space-y-2">
+            {LEARNING_PATH.map((step, index) => (
+              <div
+                key={step.label}
+                className={`auth-module-row flex items-center gap-2.5 rounded-xl border px-2.5 py-2.5 ${
+                  step.active
+                    ? 'border-brand-400/25 bg-brand-500/10'
+                    : 'border-transparent bg-white/[0.025]'
+                }`}
+                style={{ animationDelay: `${0.4 + index * 0.38}s` }}
+              >
+                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[9px] font-bold ${
+                  step.complete
+                    ? 'bg-emerald-400/10 text-emerald-300'
+                    : step.active
+                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
+                      : 'bg-white/[0.04] text-slate-600'
+                }`}>
+                  {step.complete ? <Check className="h-3 w-3" /> : index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[10px] font-semibold text-slate-300">{step.label}</span>
+                  <span className="block text-[8px] text-slate-600">{step.detail}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-xl border border-cyan-400/15 bg-gradient-to-br from-cyan-400/[0.07] to-brand-500/[0.06] p-3">
+            <div className="flex items-center gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-cyan-400/10 text-cyan-200">
+                <BrainCircuit className="h-3.5 w-3.5" />
+              </span>
+              <div>
+                <p className="text-[9px] font-bold text-slate-300">AI tutor included</p>
+                <p className="mt-0.5 text-[8px] text-slate-600">Ask questions at every step</p>
+              </div>
             </div>
           </div>
         </div>
@@ -183,7 +200,7 @@ export default function AuthLayout({
 
         <Link to="/" className="relative z-20 flex w-fit items-center gap-3 text-white">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 shadow-lg shadow-brand-500/20">
-            <BrainCircuit className="h-5 w-5" />
+            <BookOpen className="h-5 w-5" />
           </span>
           <span className="font-display text-lg font-bold tracking-tight">Course<span className="text-brand-300">AI</span></span>
         </Link>
@@ -191,24 +208,24 @@ export default function AuthLayout({
         <div className="relative z-10 my-auto max-w-3xl py-8 animate-enter">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-300">
             <Sparkles className="h-3.5 w-3.5" />
-            Your AI computer science mentor
+            Learn anything, built around you
           </div>
           <h2 className="gradient-text max-w-2xl font-display text-5xl font-extrabold leading-[1.04] tracking-[-0.055em] xl:text-6xl">
-            Master DSA. Build real engineering intuition.
+            Turn any curiosity into real capability.
           </h2>
           <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400 xl:text-base">
-            Go from arrays to system design with personalized lessons, visual explanations, coding practice, quizzes, and an AI tutor that never gets tired.
+            CourseAI creates a complete learning journey for your goal, with clear lessons, hands-on practice, helpful videos, quizzes, and an AI tutor.
           </p>
 
-          <DsaWorkspace />
+          <LearningStudio />
         </div>
 
         <div className="relative z-10 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
-          <span>Data Structures</span>
+          <span>Any topic</span>
           <span className="h-1 w-1 rounded-full bg-brand-400" />
-          <span>Algorithms</span>
+          <span>Your pace</span>
           <span className="h-1 w-1 rounded-full bg-cyan-400" />
-          <span>Core CS</span>
+          <span>Real outcomes</span>
         </div>
       </section>
 
@@ -217,7 +234,7 @@ export default function AuthLayout({
         <div className="w-full max-w-md animate-enter-delay">
           <Link to="/" className="mb-8 flex w-fit items-center gap-2.5 text-white lg:hidden">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 shadow-lg shadow-brand-500/20">
-              <BrainCircuit className="h-4 w-4" />
+              <BookOpen className="h-4 w-4" />
             </span>
             <span className="font-display font-bold tracking-tight">Course<span className="text-brand-300">AI</span></span>
           </Link>

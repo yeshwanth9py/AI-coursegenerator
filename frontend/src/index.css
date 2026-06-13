@@ -407,26 +407,40 @@ select:focus-visible {
   animation: workspaceShine 7s 2s ease-in-out infinite;
 }
 
-.auth-code-line {
-  width: 0;
+.auth-prompt-text {
+  max-height: 3.75rem;
   overflow: hidden;
-  white-space: nowrap;
   opacity: 0;
-  animation: codeType 0.8s steps(34, end) forwards;
+  animation: promptReveal 1.8s 0.35s steps(58, end) forwards;
 }
 
-.auth-code-cursor {
+.auth-idea-card,
+.auth-module-row {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: authItemReveal 0.55s ease forwards;
+}
+
+.auth-feature-chip {
+  animation: featureGlow 3s ease-in-out infinite;
+}
+
+.auth-live-badge::before {
   display: inline-block;
-  width: 0.45rem;
-  height: 1rem;
-  border-radius: 2px;
-  background: #818cf8;
-  box-shadow: 0 0 10px rgba(129, 140, 248, 0.8);
-  animation: cursorBlink 0.8s steps(1, end) infinite;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin-right: 0.35rem;
+  border-radius: 999px;
+  background: #34d399;
+  content: "";
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+  animation: livePulse 1.4s ease-in-out infinite;
 }
 
-.auth-array-cell {
-  animation: arrayScan 2.45s ease-in-out infinite;
+.auth-progress-ring {
+  stroke-dasharray: 107;
+  stroke-dashoffset: 107;
+  animation: progressDraw 2.4s 0.5s ease forwards;
 }
 
 @keyframes circuitDrift {
@@ -464,30 +478,27 @@ select:focus-visible {
   65%, 100% { transform: translateX(100%); }
 }
 
-@keyframes codeType {
-  from { width: 0; opacity: 0.35; }
-  to { width: 100%; opacity: 1; }
+@keyframes promptReveal {
+  from { max-width: 0; opacity: 0.3; }
+  to { max-width: 100%; opacity: 1; }
 }
 
-@keyframes cursorBlink {
-  0%, 45% { opacity: 1; }
-  46%, 100% { opacity: 0; }
+@keyframes authItemReveal {
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes arrayScan {
-  0%, 18%, 100% {
-    border-color: rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.035);
-    color: #94a3b8;
-    transform: translateY(0);
-  }
-  25%, 48% {
-    border-color: rgba(34, 211, 238, 0.4);
-    background: rgba(34, 211, 238, 0.12);
-    color: #a5f3fc;
-    transform: translateY(-3px);
-    box-shadow: 0 0 16px rgba(34, 211, 238, 0.13);
-  }
+@keyframes featureGlow {
+  0%, 100% { border-color: rgba(255, 255, 255, 0.06); color: #64748b; }
+  50% { border-color: rgba(129, 140, 248, 0.18); color: #a5b4fc; }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes progressDraw {
+  to { stroke-dashoffset: 34; }
 }
 
 @media print {
